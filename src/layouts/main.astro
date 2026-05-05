@@ -1,0 +1,258 @@
+
+
+
+
+
+
+---
+import '../../generated/fonts.css';
+import '../site-components/global.css';
+import '../styles/global.css';
+
+const { pageClass = '' } = Astro.props;
+
+// Get current URL for canonical and OG tags
+const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://boundless.com');
+
+// Structured Data for Local Business
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Boundless",
+  "description": "Transform your painting business with Boundless - Get more leads, automate your operations, and scale with confidence.",
+  "url": canonicalURL.href,
+  "telephone": "+1-778-200-9960",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Vancouver",
+    "addressRegion": "BC",
+    "addressCountry": "CA"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": "49.2827",
+    "longitude": "-123.1207"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "127"
+  },
+  "priceRange": "$$",
+  "image": canonicalURL.origin + "/og-image.jpg"
+};
+
+// FAQ Structured Data
+const faqData = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How quickly will I see results?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most contractors see their first qualified leads within 7-14 days of launching their campaigns."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need technical skills?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not at all! We handle all the technical setup and training. You focus on closing deals."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What if I'm already busy with projects?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Perfect! Our system helps you manage growth sustainably. Scale at your own pace."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a long-term contract?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No long-term contracts. Cancel anytime. We earn your business every month."
+      }
+    }
+  ]
+};
+---
+
+<!DOCTYPE html>
+<html lang="en" class={pageClass}>
+<head>
+  <meta charset="utf-8" />
+  
+  <!-- Viewport & Mobile Optimization -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#35271c" />
+  
+  <!-- Primary Meta Tags -->
+  <title>Boundless - Transform Your Painting Business | Get More Leads in Vancouver</title>
+  <meta name="title" content="Boundless - Transform Your Painting Business | Get More Leads in Vancouver" />
+  <meta name="description" content="Transform your painting business with Boundless - Get more leads, automate your operations, and scale with confidence. The complete growth system for painting contractors in Vancouver." />
+  <meta name="keywords" content="painting business leads, painting contractor marketing, Vancouver painting leads, painting business automation, CRM for painters, painting lead generation" />
+  <meta name="author" content="Boundless" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href={canonicalURL.href} />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23C4A574'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white' font-family='Arial, sans-serif' font-weight='bold'>B</text></svg>" />
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={canonicalURL.href} />
+  <meta property="og:title" content="Boundless - Transform Your Painting Business" />
+  <meta property="og:description" content="Get more leads, automate your operations, and scale with confidence. The complete growth system for painting contractors." />
+  <meta property="og:image" content="https://i.imgur.com/HG0iDKe.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Boundless - Painting Business Growth System" />
+  <meta property="og:locale" content="en_CA" />
+  <meta property="og:site_name" content="Boundless" />
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content={canonicalURL.href} />
+  <meta name="twitter:title" content="Boundless - Transform Your Painting Business" />
+  <meta name="twitter:description" content="Get more leads, automate your operations, and scale with confidence. The complete growth system for painting contractors." />
+  <meta name="twitter:image" content="https://i.imgur.com/HG0iDKe.jpg" />
+  <meta name="twitter:image:alt" content="Boundless - Painting Business Growth System" />
+  
+  <!-- Local Business Schema -->
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  
+  <!-- FAQ Schema -->
+  <script type="application/ld+json" set:html={JSON.stringify(faqData)} />
+  
+  <!-- DNS Prefetch & Preconnect for Performance -->
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  
+  <!-- Preload Critical Resources -->
+  <link rel="preload" href="/generated/fonts.css" as="style" />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" as="style" />
+  
+  <!-- Generator -->
+  <meta name="generator" content={Astro.generator} />
+
+  <!-- Google Analytics 4 -->
+  {import.meta.env.PUBLIC_GA_MEASUREMENT_ID && (
+    <>
+      <script async src={`https://www.googletagmanager.com/gtag/js?id=${import.meta.env.PUBLIC_GA_MEASUREMENT_ID}`}></script>
+      <script define:vars={{ measurementId: import.meta.env.PUBLIC_GA_MEASUREMENT_ID }}>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', measurementId, {
+          page_path: window.location.pathname,
+          send_page_view: true,
+          cookie_flags: 'SameSite=None;Secure'
+        });
+      </script>
+    </>
+  )}
+  
+  <!-- Font Loading Strategy - Display Swap for Performance -->
+  <style>
+    /* Font display swap to prevent FOIT (Flash of Invisible Text) */
+    @font-face {
+      font-family: 'Inter';
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Inter Tight';
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'JetBrains Mono';
+      font-display: swap;
+    }
+  </style>
+</head>
+<body class="">
+  <slot />
+  
+  <!-- Analytics - Deferred for Performance -->
+  <script>
+    // Defer analytics to not block rendering
+    window.addEventListener('load', () => {
+      // Import and initialize analytics
+      import('../lib/analytics').then(({ analytics }) => {
+        // Initialize GA4 if measurement ID is available
+        const measurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
+        if (measurementId && !window.gtag) {
+          analytics.initGA4(measurementId);
+        }
+
+        // Track CTA button clicks
+        document.addEventListener('click', (e) => {
+          const target = e.target as HTMLElement;
+          const button = target.closest('button, a[href]');
+          
+          if (button) {
+            const text = button.textContent?.trim() || '';
+            const href = button.getAttribute('href');
+            
+            // Track CTA buttons
+            if (text.toLowerCase().includes('book') || 
+                text.toLowerCase().includes('get started') ||
+                text.toLowerCase().includes('schedule')) {
+              analytics.trackClick('cta_button', { text, href });
+              analytics.trackBooking({ button_text: text });
+            }
+
+            // Track phone number clicks
+            if (href && href.startsWith('tel:')) {
+              analytics.trackPhoneCall(href.replace('tel:', ''));
+            }
+
+            // Track email clicks
+            if (href && href.startsWith('mailto:')) {
+              analytics.trackClick('email_link', { email: href.replace('mailto:', '') });
+            }
+          }
+        });
+        
+        // Track form submissions
+        document.addEventListener('submit', (e) => {
+          const form = e.target as HTMLFormElement;
+          const formName = form.getAttribute('name') || form.id || 'unnamed_form';
+          
+          // Get email if present
+          const emailInput = form.querySelector('input[type="email"]') as HTMLInputElement;
+          if (emailInput && emailInput.value) {
+            analytics.trackEmailSubmit(emailInput.value, formName);
+          } else {
+            analytics.trackFormSubmit(formName);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,16 @@
+---
+import MainLayout from '../layouts/main.astro';
+import PricingSection from '../components/PricingSection';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+---
+
+<MainLayout pageClass="">
+  <Header client:only="react" backgroundColor="#a28b6d" />
+  <div class="pt-20">
+    <PricingSection client:only="react" />
+  </div>
+  <Footer client:only="react" />
+</MainLayout>
+
+
