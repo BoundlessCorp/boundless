@@ -165,10 +165,11 @@ export default function Footer() {
           <div className="flex flex-col items-start gap-1">
             <img
               src="https://media.base44.com/images/public/69d9696e29a47b1500cec646/31c14c5ad_boundless-primary-2026-04-26.png"
-              alt="Boundless"
+              alt="Boundless Logo"
               className="h-12 w-auto mb-4"
               loading="lazy"
-              decoding="async"
+              width="120"
+              height="48"
             />
             <p className="text-obsidian/70 text-xs font-body leading-relaxed max-w-md">
               Performance-driven client acquisition systems for local service businesses. Based in Vancouver, Canada.
@@ -191,6 +192,8 @@ export default function Footer() {
     </footer>
   );
 }
+
+
 
 
 

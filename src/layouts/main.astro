@@ -3,7 +3,6 @@
 
 
 
-
 ---
 import '../../generated/fonts.css';
 import '../site-components/global.css';
@@ -134,17 +133,67 @@ const faqData = {
   
   <!-- FAQ Schema -->
   <script type="application/ld+json" set:html={JSON.stringify(faqData)} />
-  
+
+  <!-- Pricing Schema -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Boundless - Painting Business Growth System",
+  "description": "Complete lead generation and business automation system for painting contractors",
+  "brand": {
+    "@type": "Brand",
+    "name": "Boundless"
+  },
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Starter Package",
+      "description": "Perfect for painters ready to scale",
+      "price": "997",
+      "priceCurrency": "CAD",
+      "availability": "https://schema.org/InStock",
+      "url": "https://buy.stripe.com/14k9Dw0Hy0Hy0Vy6oo"
+    },
+    {
+      "@type": "Offer",
+      "name": "Growth Package",
+      "description": "For established contractors ready to dominate",
+      "price": "1997",
+      "priceCurrency": "CAD",
+      "availability": "https://schema.org/InStock",
+      "url": "https://buy.stripe.com/5kA03W5XS0Hy7hW28a"
+    }
+  ],
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "127"
+  }
+}
+</script>
+
   <!-- DNS Prefetch & Preconnect for Performance -->
   <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
   <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+  <link rel="dns-prefetch" href="https://images.unsplash.com" />
+  <link rel="dns-prefetch" href="https://media.base44.com" />
+  <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  
+  <link rel="preconnect" href="https://images.unsplash.com" />
+
   <!-- Preload Critical Resources -->
   <link rel="preload" href="/generated/fonts.css" as="style" />
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" as="style" />
-  
+  <link rel="preload" href="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&auto=format&fit=crop" as="image" fetchpriority="high" />
+
+  <!-- Load fonts with display=swap for performance -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'" />
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" />
+  </noscript>
+
   <!-- Generator -->
   <meta name="generator" content={Astro.generator} />
 
@@ -242,8 +291,30 @@ const faqData = {
       });
     });
   </script>
+
+  <!-- Service Worker Registration - Production Only -->
+  {import.meta.env.PROD && (
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered:', registration);
+            })
+            .catch((error) => {
+              console.log('SW registration failed:', error);
+            });
+        });
+      }
+    </script>
+  )}
 </body>
 </html>
+
+
+
+
+
 
 
 

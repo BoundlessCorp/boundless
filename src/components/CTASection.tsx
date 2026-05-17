@@ -1,3 +1,5 @@
+
+
 import { useState } from 'react';
 import { ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 import { baseUrl } from '../lib/base-url';
@@ -7,7 +9,7 @@ export default function CTASection() {
     name: '',
     email: '',
     phone: '',
-    company: '',
+    business: '',
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,16 +21,22 @@ export default function CTASection() {
     setSubmitStatus('idle');
 
     try {
+      console.log('Submitting form data:', formData);
       const response = await fetch(`${baseUrl}/api/send-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
+      console.log('Response status:', response.status);
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
+
       if (response.ok) {
         setSubmitStatus('success');
-        setFormData({ name: '', email: '', phone: '', company: '', message: '' });
+        setFormData({ name: '', email: '', phone: '', business: '', message: '' });
       } else {
+        console.error('Server error:', responseData);
         setSubmitStatus('error');
       }
     } catch (error) {
@@ -127,9 +135,9 @@ export default function CTASection() {
                   <input
                     type="text"
                     required
-                    value={formData.company}
+                    value={formData.business}
                     onChange={handleChange}
-                    name="company"
+                    name="business"
                     className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground font-body text-base placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
                     placeholder="ABC Painting Co."
                   />
@@ -179,6 +187,8 @@ export default function CTASection() {
     </section>
   );
 }
+
+
 
 
 

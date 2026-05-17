@@ -1,0 +1,2 @@
+# Ignore _worker.js directory to prevent exposure warning
+_worker.js

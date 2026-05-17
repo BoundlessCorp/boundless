@@ -11,7 +11,6 @@ import OfferSection from './OfferSection';
 import PricingSection from './PricingSection';
 import CTASection from './CTASection';
 import Footer from './Footer';
-import ExitIntentPopup from './ExitIntentPopup';
 import MobileCallButton from './MobileCallButton';
 
 const IMAGES = {
@@ -38,10 +37,10 @@ export default function Home() {
       <CTASection />
       <Footer />
       <MobileCallButton />
-      <ExitIntentPopup />
     </div>
   );
 }
+
 
 
 

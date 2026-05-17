@@ -27,13 +27,14 @@ export default function ProblemSection() {
   return (
     <section id="problem" className="relative py-32 lg:py-48 overflow-hidden" style={{ backgroundColor: '#a28b6d' }}>
       {/* Background Image with Overlay */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1600&h=900&fit=crop&q=80"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover opacity-10"
+          src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1920&auto=format&fit=crop&q=80"
+          alt="Frustrated painting contractor struggling with business growth and lead generation challenges"
+          className="w-full h-full object-cover opacity-10"
           loading="lazy"
-          decoding="async"
+          width="1920"
+          height="1080"
         />
         <div className="absolute inset-0" style={{ 
           background: 'linear-gradient(to bottom, #a28b6d, rgba(162, 139, 109, 0.95), #a28b6d)' 
@@ -92,6 +93,7 @@ export default function ProblemSection() {
     </section>
   );
 }
+
 
 
 

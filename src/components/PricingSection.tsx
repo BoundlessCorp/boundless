@@ -1,12 +1,7 @@
-
-
-
-
-
-
 import { Check, ArrowRight, Sparkles, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { baseUrl } from '../lib/base-url';
+import { useState } from 'react';
 
 const packages = [
   {
@@ -14,6 +9,7 @@ const packages = [
     subtitle: 'Stop Losing Leads',
     price: '$397',
     period: '/month',
+    paymentLink: 'https://buy.stripe.com/14A00jdyhg4kcnZ5Dx3Nm07', // Your Stripe Payment Link
     description: 'Best for businesses that already get inquiries but are not consistently following up or converting them.',
     outcome: 'Turn more of your existing leads into paying customers',
     features: [
@@ -31,6 +27,7 @@ const packages = [
     subtitle: 'Consistent Leads & Booked Appointments',
     price: '$1,200',
     period: '/month',
+    paymentLink: 'https://buy.stripe.com/6oU5kD2TDf0g0Fhc1V3Nm08', // Add your Growth package Stripe Payment Link here
     badge: 'Most Popular',
     description: 'Best for businesses that want predictable monthly lead flow and booked appointments.',
     outcome: 'Generate consistent new leads and booked calls every month',
@@ -50,6 +47,7 @@ const packages = [
     subtitle: 'Fully Automated Growth Machine',
     price: '$2,500',
     period: '/month',
+    paymentLink: 'https://buy.stripe.com/9B6eVd8dXf0g5ZB7LF3Nm0a', // Your Stripe Payment Link
     description: 'Best for businesses that want everything handled and want to scale aggressively.',
     outcome: 'Fully automated and optimized system to scale your business',
     features: [
@@ -66,6 +64,24 @@ const packages = [
 ];
 
 const PricingSection = () => {
+  const handlePurchase = (paymentLink: string, packageName: string) => {
+    if (!paymentLink) {
+      alert('Payment link not configured yet. Please contact support.');
+      return;
+    }
+    
+    // Track the click in analytics if available
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'begin_checkout', {
+        event_category: 'Ecommerce',
+        event_label: packageName,
+      });
+    }
+    
+    // Redirect to Stripe Payment Link
+    window.location.href = paymentLink;
+  };
+
   const scrollToBooking = () => {
     // Navigate to home page and scroll to booking
     window.location.href = `${baseUrl}/#booking`;
@@ -174,16 +190,14 @@ const PricingSection = () => {
 
               {/* CTA Button */}
               <button
-                onClick={scrollToBooking}
+                onClick={() => handlePurchase(pkg.paymentLink, pkg.name)}
                 className="group w-full font-heading font-bold text-base py-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-lg border"
                 style={{ backgroundColor: '#a28b6d', borderColor: '#35271c', color: '#35271c' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#937d5f'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#a28b6d'}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#937d5f')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#a28b6d')}
               >
-                <span className="group-hover:opacity-0 transition-opacity">{pkg.cta}</span>
-                <span className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {pkg.cta} <ArrowRight size={18} />
-                </span>
+                <span>{pkg.cta}</span>
+                <ArrowRight size={18} className="opacity-0 group-hover:opacity-100 transition-opacity -ml-2 group-hover:ml-0" />
               </button>
             </motion.div>
           ))}
@@ -210,10 +224,8 @@ const PricingSection = () => {
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#937d5f'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#a28b6d'}
           >
-            <span className="group-hover:opacity-0 transition-opacity">Book a Free Strategy Call</span>
-            <span className="absolute flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              Let's Talk <ArrowRight size={20} />
-            </span>
+            <span>Book a Free Strategy Call</span>
+            <ArrowRight size={20} className="opacity-0 group-hover:opacity-100 transition-opacity -ml-2 group-hover:ml-0" />
           </a>
           <p className="text-sm text-obsidian/60 mt-4 font-mono">
             Free · No obligation · See real ROI projections
@@ -225,6 +237,12 @@ const PricingSection = () => {
 };
 
 export default PricingSection;
+
+
+
+
+
+
 
 
 

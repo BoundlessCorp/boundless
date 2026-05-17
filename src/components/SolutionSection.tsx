@@ -118,10 +118,11 @@ export default function SolutionSection({ dashboardImage }: SolutionSectionProps
           >
             <img
               src={dashboardImage}
-              alt="CRM Dashboard showing lead management"
-              className="w-full h-auto"
+              alt="Boundless CRM dashboard showing automated lead management, campaign tracking, and business analytics for painting contractors"
+              className="w-full h-auto rounded-xl shadow-2xl border-4 border-signal/20"
               loading="lazy"
-              decoding="async"
+              width="1200"
+              height="800"
             />
           </div>
         )}
@@ -142,6 +143,7 @@ export default function SolutionSection({ dashboardImage }: SolutionSectionProps
     </section>
   );
 }
+
 
 
 

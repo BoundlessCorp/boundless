@@ -3,7 +3,6 @@
 
 
 
-
 import { useState, useRef, useEffect } from 'react';
 import { ArrowRight, Phone, TrendingUp, Sparkles, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -48,11 +47,12 @@ export default function HeroSection() {
       {/* Background image - Home service business / Marketing */}
       <img
         src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&auto=format&fit=crop"
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ opacity: 0.06 }}
+        alt="Professional painting business marketing dashboard showing lead generation and campaign analytics"
+        className="absolute inset-0 w-full h-full object-cover opacity-5"
         loading="eager"
-        decoding="async"
+        fetchpriority="high"
+        width="1920"
+        height="1080"
       />
       
       {/* Animated gradient background */}
@@ -268,6 +268,7 @@ export default function HeroSection() {
     </section>
   );
 }
+
 
 
 

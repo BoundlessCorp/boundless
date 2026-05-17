@@ -103,9 +103,10 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
             <button onClick={goToHome} className="flex items-center gap-2">
               <img
                 src="https://media.base44.com/images/public/69d9696e29a47b1500cec646/8f83fed3b_BrandIcon.png"
-                alt="Boundless"
+                alt="Boundless - Painting Business Growth System Logo"
                 className="h-8 w-auto"
-                decoding="async"
+                width="120"
+                height="32"
               />
             </button>
 
@@ -223,5 +224,7 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
     </>
   );
 }
+
+
 
 

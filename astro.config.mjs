@@ -2,6 +2,7 @@
 
 
 
+
 import {defineConfig} from 'astro/config';
 import cloudflare from '@astrojs/cloudflare';
 import react from '@astrojs/react';
@@ -102,10 +103,24 @@ export default defineConfig({
         limitInputPixels: false,
       },
     },
-    domains: [],
-    remotePatterns: [],
+    domains: ['images.unsplash.com', 'media.base44.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media.base44.com',
+      },
+    ],
+  },
+  compressHTML: true,
+  build: {
+    inlineStylesheets: 'auto',
   },
 });
+
 
 
 

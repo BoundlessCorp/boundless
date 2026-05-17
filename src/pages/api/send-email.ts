@@ -15,6 +15,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // Get API key from environment
     const apiKey = locals?.runtime?.env?.RESEND_API_KEY || import.meta.env.RESEND_API_KEY;
     
+    console.log('API Key present:', !!apiKey);
+    
     if (!apiKey) {
       console.error('Missing RESEND_API_KEY');
       return new Response(
@@ -32,6 +34,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const body = await request.json() as EmailRequestBody;
     const { name, email, phone, business, message, source } = body;
 
+    console.log('Received form data:', { name, email, phone, business, source });
+
     // Validate required fields
     if (!name || !email) {
       return new Response(
@@ -44,6 +48,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     // Send email to business owner
+    console.log('Attempting to send email via Resend...');
     const { data, error } = await resend.emails.send({
       from: 'Boundless Leads <noreply@boundlesscorp.ca>',
       to: ['jason@boundlesscorp.ca'],
@@ -133,16 +138,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Failed to send email' 
+          error: 'Failed to send email',
+          details: error.message || 'Unknown error'
         }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
+    console.log('Email sent successfully:', data);
+
     // Optionally send auto-responder to lead
     if (email) {
+      console.log('Sending auto-responder to:', email);
       await resend.emails.send({
-        from: 'Jason at Boundless <jason@boundlesscorp.ca>',
+        from: 'Boundless <noreply@boundlesscorp.ca>',
         to: [email],
         subject: "Thanks for reaching out! We'll be in touch soon.",
         html: `
@@ -208,10 +217,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: 'Internal server error' 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 };
+
+
+
 

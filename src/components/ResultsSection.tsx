@@ -56,7 +56,8 @@ export default function ResultsSection({ painterImage = "https://images.unsplash
                 alt="Beautiful freshly painted home interior showcasing professional results"
                 className="w-full h-full object-cover"
                 loading="lazy"
-                decoding="async"
+                width="800"
+                height="1000"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-obsidian/60 via-transparent to-transparent"></div>
             </div>
@@ -135,6 +136,8 @@ export default function ResultsSection({ painterImage = "https://images.unsplash
     </section>
   );
 }
+
+
 
 
 

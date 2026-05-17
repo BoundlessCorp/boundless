@@ -95,211 +95,185 @@ export default function ExitIntentPopup({ showPreview = false }: ExitIntentPopup
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-obsidian/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto"
+            className="fixed inset-0 bg-obsidian/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             onClick={handleClose}
           >
-            <div className="min-h-full w-full flex items-center justify-center py-4">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative bg-chalk rounded-2xl shadow-2xl max-w-lg w-full mx-4 my-4 overflow-hidden border-2 border-[#35271c]"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="relative">
-                  {/* Header with gradient */}
-                  <div className="relative bg-gradient-to-br from-obsidian via-steel to-obsidian p-6 sm:p-8 pt-14 sm:pt-16 text-chalk overflow-hidden">
-                    {/* Decorative elements */}
-                    <div className="absolute top-0 right-0 w-40 h-40 bg-signal/10 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber/10 rounded-full blur-2xl"></div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative bg-chalk rounded-2xl shadow-2xl max-w-lg w-full border-2 border-[#35271c]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative">
+                {/* Header with gradient */}
+                <div className="relative bg-gradient-to-br from-obsidian via-steel to-obsidian p-4 sm:p-6 text-chalk overflow-hidden">
+                  {/* Decorative elements */}
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-signal/10 rounded-full blur-3xl"></div>
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber/10 rounded-full blur-2xl"></div>
 
-                    {/* Close button - moved down to be visible */}
-                    <button
-                      onClick={handleClose}
-                      className="absolute top-3 sm:top-4 right-3 sm:right-4 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-chalk text-obsidian hover:bg-signal hover:text-chalk transition-all duration-200 hover:rotate-90 group z-20 shadow-lg"
-                      aria-label="Close popup"
-                    >
-                      <X size={20} className="sm:w-6 sm:h-6 font-bold stroke-[3]" />
-                    </button>
+                  {/* Close button */}
+                  <button
+                    onClick={handleClose}
+                    className="absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-chalk text-obsidian hover:bg-signal hover:text-chalk transition-all duration-200 hover:rotate-90 group z-20 shadow-lg"
+                    aria-label="Close popup"
+                  >
+                    <X size={18} className="sm:w-5 sm:h-5 font-bold stroke-[3]" />
+                  </button>
 
-                    {!submitted ? (
-                      <>
-                        {/* Content */}
-                        <div className="p-6 sm:p-8 space-y-4 sm:space-y-6">
-                          {/* Title */}
-                          <div className="text-center mb-6">
-                            <h2 className="text-2xl sm:text-3xl font-bold mb-2 font-heading text-obsidian">
-                              Exclusive Insider Access
-                            </h2>
-                            <p className="text-base sm:text-lg text-steel font-semibold">
-                              Don't Miss Out on Our Next Deal!
-                            </p>
-                          </div>
+                  {!submitted ? (
+                    <>
+                      {/* Content */}
+                      <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+                        {/* Title */}
+                        <div className="text-center mb-2 sm:mb-3">
+                          <h2 className="text-lg sm:text-2xl font-bold mb-1 font-heading text-obsidian leading-tight">
+                            Exclusive Insider Access
+                          </h2>
+                          <p className="text-xs sm:text-base text-steel font-semibold">
+                            Don't Miss Out on Our Next Deal!
+                          </p>
+                        </div>
 
-                          <div className="space-y-3.5 mb-6">
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-signal/10 flex items-center justify-center flex-shrink-0 border border-signal/20">
-                                <Bell size={18} className="text-signal" />
-                              </div>
-                              <div>
-                                <p className="text-obsidian font-bold text-base mb-1">
-                                  Early Bird Access
-                                </p>
-                                <p className="text-steel text-sm font-body leading-relaxed">
-                                  Get notified 24-48 hours before we announce deals publicly
-                                </p>
-                              </div>
+                        <div className="space-y-2 sm:space-y-2.5 mb-3 sm:mb-4">
+                          <div className="flex items-start gap-2">
+                            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-signal/10 flex items-center justify-center flex-shrink-0 border border-signal/20">
+                              <Bell size={14} className="sm:w-4 sm:h-4 text-signal" />
                             </div>
-                            
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-amber/10 flex items-center justify-center flex-shrink-0 border border-amber/20">
-                                <Percent size={18} className="text-amber" />
-                              </div>
-                              <div>
-                                <p className="text-obsidian font-bold text-base mb-1">
-                                  Exclusive VIP Discounts
-                                </p>
-                                <p className="text-steel text-sm font-body leading-relaxed">
-                                  Special pricing and bonuses reserved only for our insider list
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-signal/10 flex items-center justify-center flex-shrink-0 border border-signal/20">
-                                <Gift size={18} className="text-signal" />
-                              </div>
-                              <div>
-                                <p className="text-obsidian font-bold text-base mb-1">
-                                  Limited-Time Promotions
-                                </p>
-                                <p className="text-steel text-sm font-body leading-relaxed">
-                                  Flash sales, seasonal offers, and one-time bonuses
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Form */}
-                          <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
-                              <input
-                                type="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="you@example.com"
-                                disabled={loading}
-                                className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-steel/30 rounded-lg bg-chalk/50 text-obsidian placeholder:text-steel focus:outline-none focus:border-signal focus:ring-2 focus:ring-signal/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                              />
+                              <p className="text-obsidian font-bold text-xs sm:text-sm mb-0.5">
+                                Early Bird Access
+                              </p>
+                              <p className="text-steel text-[11px] sm:text-xs font-body leading-snug">
+                                Get notified 24-48 hours before we announce deals publicly
+                              </p>
                             </div>
-
-                            {error && (
-                              <div className="bg-destructive/10 border border-destructive/30 text-destructive rounded-lg px-4 py-3 text-sm font-body font-medium">
-                                {error}
-                              </div>
-                            )}
-
-                            <button
-                              type="submit"
-                              disabled={loading}
-                              className="w-full bg-signal hover:bg-amber text-obsidian font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm sm:text-base"
-                            >
-                              {loading ? (
-                                <>
-                                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-obsidian/30 border-t-obsidian rounded-full animate-spin" />
-                                  Subscribing...
-                                </>
-                              ) : (
-                                <>
-                                  Get Exclusive Access
-                                  <ArrowRight size={16} className="hidden sm:inline" />
-                                </>
-                              )}
-                            </button>
-                          </form>
-
-                          <div className="flex items-center justify-center gap-3 mt-4">
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                              <span className="text-xs text-steel font-mono font-medium">No spam</span>
+                          </div>
+                          
+                          <div className="flex items-start gap-2">
+                            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-amber/10 flex items-center justify-center flex-shrink-0 border border-amber/20">
+                              <Percent size={14} className="sm:w-4 sm:h-4 text-amber" />
                             </div>
-                            <div className="w-px h-3 bg-steel/30"></div>
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                              <span className="text-xs text-steel font-mono font-medium">Unsubscribe anytime</span>
+                            <div>
+                              <p className="text-obsidian font-bold text-xs sm:text-sm mb-0.5">
+                                Exclusive VIP Discounts
+                              </p>
+                              <p className="text-steel text-[11px] sm:text-xs font-body leading-snug">
+                                Special pricing and bonuses reserved only for our insider list
+                              </p>
                             </div>
-                            <div className="w-px h-3 bg-steel/30"></div>
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                              <span className="text-xs text-steel font-mono font-medium">VIP only</span>
+                          </div>
+                          
+                          <div className="flex items-start gap-2">
+                            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-signal/10 flex items-center justify-center flex-shrink-0 border border-signal/20">
+                              <Gift size={14} className="sm:w-4 sm:h-4 text-signal" />
+                            </div>
+                            <div>
+                              <p className="text-obsidian font-bold text-xs sm:text-sm mb-0.5">
+                                Limited-Time Promotions
+                              </p>
+                              <p className="text-steel text-[11px] sm:text-xs font-body leading-snug">
+                                Flash sales, seasonal offers, and one-time bonuses
+                              </p>
                             </div>
                           </div>
                         </div>
-                      </>
-                    ) : (
-                      /* Success state */
-                      <div className="p-12 text-center">
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: 'spring', duration: 0.5 }}
-                          className="w-20 h-20 bg-gradient-to-br from-signal to-amber rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
-                        >
-                          <Gift size={36} className="text-obsidian" />
-                        </motion.div>
-                        
-                        <h4 className="font-heading font-bold text-2xl text-obsidian mb-2">
-                          You're In! 🎉
-                        </h4>
-                        <p className="text-steel font-body text-lg mb-4 font-medium">
-                          Welcome to our VIP insider list!
-                        </p>
-                        <p className="text-base text-obsidian/90 font-body leading-relaxed">
-                          Check <strong className="text-signal">{email}</strong> for confirmation.<br/>
-                          You'll be the first to know about our next exclusive offer.
-                        </p>
-                        
-                        <div className="mt-6 inline-flex items-center gap-2 bg-signal/10 text-signal border border-signal/20 px-4 py-2 rounded-full">
-                          <Sparkles size={14} />
-                          <span className="text-sm font-semibold">Watch your inbox for VIP deals!</span>
+
+                        {/* Form */}
+                        <form onSubmit={handleSubmit} className="space-y-2.5 sm:space-y-3">
+                          <div>
+                            <input
+                              type="email"
+                              required
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="you@example.com"
+                              disabled={loading}
+                              className="w-full px-3 py-2 sm:py-2.5 text-sm border-2 border-steel/30 rounded-lg bg-chalk/50 text-obsidian placeholder:text-steel focus:outline-none focus:border-signal focus:ring-2 focus:ring-signal/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </div>
+
+                          {error && (
+                            <div className="bg-destructive/10 border border-destructive/30 text-destructive rounded-lg px-3 py-2 text-xs font-body font-medium">
+                              {error}
+                            </div>
+                          )}
+
+                          <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-signal hover:bg-amber text-obsidian font-bold py-2 sm:py-2.5 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm border-2"
+                            style={{ borderColor: '#35271c' }}
+                          >
+                            {loading ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-obsidian/30 border-t-obsidian rounded-full animate-spin" />
+                                Subscribing...
+                              </>
+                            ) : (
+                              <>
+                                Get Exclusive Access
+                                <ArrowRight size={16} className="hidden sm:inline" />
+                              </>
+                            )}
+                          </button>
+                        </form>
+
+                        <div className="flex items-center justify-center gap-2 mt-2 sm:mt-3 flex-wrap">
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                            <span className="text-[10px] sm:text-xs text-steel font-mono font-medium">No spam</span>
+                          </div>
+                          <div className="w-px h-3 bg-steel/30"></div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                            <span className="text-[10px] sm:text-xs text-steel font-mono font-medium">Unsubscribe anytime</span>
+                          </div>
+                          <div className="w-px h-3 bg-steel/30"></div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                            <span className="text-[10px] sm:text-xs text-steel font-mono font-medium">VIP only</span>
+                          </div>
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </>
+                  ) : (
+                    /* Success state */
+                    <div className="p-6 sm:p-8 text-center">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', duration: 0.5 }}
+                        className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-signal to-amber rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg"
+                      >
+                        <Gift size={24} className="sm:w-7 sm:h-7 text-obsidian" />
+                      </motion.div>
+                      
+                      <h4 className="font-heading font-bold text-lg sm:text-xl text-obsidian mb-2">
+                        You're In! 🎉
+                      </h4>
+                      <p className="text-steel font-body text-sm sm:text-base mb-2 sm:mb-3 font-medium">
+                        Welcome to our VIP insider list!
+                      </p>
+                      <p className="text-xs sm:text-sm text-obsidian/90 font-body leading-relaxed">
+                        Check <strong className="text-signal">{email}</strong> for confirmation.<br/>
+                        You'll be the first to know about our next exclusive offer.
+                      </p>
+                      
+                      <div className="mt-3 sm:mt-4 inline-flex items-center gap-2 bg-signal/10 text-signal border border-signal/20 px-3 py-1.5 rounded-full">
+                        <Sparkles size={12} />
+                        <span className="text-xs font-semibold">Watch your inbox for VIP deals!</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </motion.div>
-            </div>
+              </div>
+            </motion.div>
           </motion.div>
         </>
       )}
     </AnimatePresence>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
