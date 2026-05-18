@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ChevronDown, HelpCircle } from 'lucide-react';
+import { ChevronDown, HelpCircle, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PopupModal } from 'react-calendly';
 
 interface FAQItem {
   question: string;
@@ -52,6 +53,7 @@ const faqs: FAQItem[] = [
 
 export default function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -146,27 +148,42 @@ export default function FAQSection() {
         </div>
 
         {/* CTA at bottom */}
-        <div className="mt-16 text-center">
-          <p className="text-steel font-body text-lg mb-6">
-            Still have questions? Let's talk.
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-16 text-center p-8 rounded-xl"
+          style={{ backgroundColor: 'rgba(162, 139, 109, 0.05)', border: '1px solid rgba(162, 139, 109, 0.2)' }}
+        >
+          <MessageCircle className="w-12 h-12 mx-auto mb-4" style={{ color: '#a28b6d' }} />
+          <h3 className="text-2xl font-bold mb-3" style={{ color: '#f5ede0' }}>
+            Still have questions?
+          </h3>
+          <p className="mb-6" style={{ color: '#7a6552' }}>
+            Book a free strategy call and we'll answer everything.
           </p>
-          <a
-            href="https://calendly.com/jason-boundlesscorp/30min"
-            className="group relative inline-flex items-center gap-3 font-heading font-bold text-lg bg-gradient-to-r from-signal to-amber text-obsidian px-8 py-4 rounded-xl hover:shadow-2xl hover:shadow-signal/20 hover:scale-105 transition-all duration-300"
+          <button
+            onClick={() => setIsCalendlyOpen(true)}
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-bold transition-all duration-300 hover:scale-105"
+            style={{ backgroundColor: '#a28b6d', color: '#35271c' }}
           >
-            <span>Book Your Free Strategy Call</span>
-            <motion.span
-              animate={{ x: [0, 5, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              →
-            </motion.span>
-          </a>
-        </div>
+            Schedule Your Free Call
+          </button>
+        </motion.div>
       </div>
+
+      {/* Calendly Popup Modal */}
+      <PopupModal
+        url="https://calendly.com/jason-boundlesscorp/30min"
+        onModalClose={() => setIsCalendlyOpen(false)}
+        open={isCalendlyOpen}
+        rootElement={typeof document !== 'undefined' ? document.body : undefined}
+      />
     </section>
   );
 }
+
+
 
 
 

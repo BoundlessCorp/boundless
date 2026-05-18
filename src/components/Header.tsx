@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Phone } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { PopupModal } from 'react-calendly';
 import { baseUrl } from '../lib/base-url';
 
 interface HeaderProps {
@@ -12,6 +14,7 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
   const [activeSection, setActiveSection] = useState('');
   const lastScrollY = useRef(0);
   const [atTop, setAtTop] = useState(true);
+  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -135,17 +138,15 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
               })}
             </nav>
 
-            <div className="hidden md:block">
-              <a
-                href="https://calendly.com/jason-boundlesscorp/30min"
-                className="group relative font-heading font-semibold text-sm text-primary-foreground px-6 py-2.5 rounded-lg hover:px-8 transition-all duration-300 overflow-hidden border"
-                style={{ backgroundColor: '#a28b6d', borderColor: '#35271c' }}
+            {/* Desktop CTA */}
+            <div className="hidden md:flex items-center gap-4">
+              <button
+                onClick={() => setIsCalendlyOpen(true)}
+                className="px-6 py-2 rounded-lg font-bold transition-all duration-300 hover:scale-105"
+                style={{ backgroundColor: '#a28b6d', color: '#35271c', border: '2px solid #35271c' }}
               >
-                <span className="group-hover:opacity-0 transition-opacity duration-200">Book a Call</span>
-                <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  Secure Your Slot →
-                </span>
-              </a>
+                Book a Call
+              </button>
             </div>
 
             <button
@@ -200,6 +201,50 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
         </div>
       )}
 
+      <AnimatePresence>
+        {isCalendlyOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-0 z-50 flex items-center justify-center"
+          >
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setIsCalendlyOpen(false)}
+            />
+            <div className="relative z-10 w-full max-w-md bg-white border border-border rounded-lg shadow-xl p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <Phone size={18} />
+                <h2 className="font-heading text-lg font-semibold text-signal">Book a Call</h2>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                Schedule a 30-minute call with Jason to discuss your painting business.
+              </p>
+              <div className="mt-4">
+                <button
+                  onClick={() => {
+                    setIsCalendlyOpen(true);
+                  }}
+                  className="w-full px-6 py-3 rounded-lg font-bold transition-all duration-300"
+                  style={{ backgroundColor: '#a28b6d', color: '#35271c' }}
+                >
+                  Schedule Call
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Calendly Popup Modal */}
+      <PopupModal
+        url="https://calendly.com/jason-boundlesscorp/30min"
+        onModalClose={() => setIsCalendlyOpen(false)}
+        open={isCalendlyOpen}
+        rootElement={typeof document !== 'undefined' ? document.body : undefined}
+      />
+
       <style>{`
         @keyframes fadeIn {
           from {
@@ -224,6 +269,14 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
     </>
   );
 }
+
+
+
+
+
+
+
+
 
 
 

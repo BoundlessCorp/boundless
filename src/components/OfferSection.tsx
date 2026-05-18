@@ -1,6 +1,7 @@
-
 import { Check, Shield, ArrowRight, Sparkles, Clock, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { PopupModal } from 'react-calendly';
 
 const included = [
   'Custom High-Converting Website',
@@ -14,6 +15,8 @@ const included = [
 ];
 
 const OfferSection = () => {
+  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
+
   const guarantees = [
     {
       icon: Shield,
@@ -85,6 +88,7 @@ const OfferSection = () => {
 
               <div className="mt-8 pt-8" style={{ borderTop: '1px solid rgba(53, 39, 28, 0.1)' }}>
                 <button
+                  onClick={() => setIsCalendlyOpen(true)}
                   className="group w-full relative font-heading font-bold text-sm md:text-base py-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 border"
                   style={{ backgroundColor: '#a28b6d', borderColor: '#35271c', color: '#35271c' }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c4935a'}
@@ -129,11 +133,25 @@ const OfferSection = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Calendly Popup Modal */}
+      <PopupModal
+        url="https://calendly.com/jason-boundlesscorp/30min"
+        onModalClose={() => setIsCalendlyOpen(false)}
+        open={isCalendlyOpen}
+        rootElement={typeof document !== 'undefined' ? document.body : undefined}
+      />
     </section>
   );
 };
 
 export default OfferSection;
+
+
+
+
+
+
 
 
 

@@ -1,11 +1,7 @@
-
-
-
-
-
 import { useState, useRef, useEffect } from 'react';
-import { ArrowRight, Phone, TrendingUp, Sparkles, CheckCircle } from 'lucide-react';
+import { ArrowRight, Phone, TrendingUp, Sparkles, CheckCircle, CheckCircle2, DollarSign, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { PopupModal } from 'react-calendly';
 
 export default function HeroSection() {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -15,6 +11,7 @@ export default function HeroSection() {
     activeCampaigns: 23,
     conversionRate: 34,
   });
+  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -42,6 +39,19 @@ export default function HeroSection() {
     document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const scrollToHowItWorks = () => {
+    const element = document.getElementById('how-it-works');
+    if (element) {
+      const headerOffset = 80;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20" style={{ backgroundColor: '#faf8f5' }}>
       {/* Background image - Home service business / Marketing */}
@@ -64,7 +74,7 @@ export default function HeroSection() {
       }} />
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-10 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
           {/* Left: Headline + CTA */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -95,29 +105,26 @@ export default function HeroSection() {
             </p>
 
             <motion.div
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mb-8"
+              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
             >
-              <a
-                href="https://calendly.com/jason-boundlesscorp/30min"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative inline-flex items-center justify-center px-8 py-4 font-heading font-bold text-lg rounded-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl border-2"
-                style={{ backgroundColor: '#a28b6d', color: '#35271c', borderColor: '#35271c' }}
-              >
-                <span className="relative z-10">Book a Free Strategy Call</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-              </a>
-
               <button
-                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                className="group font-heading font-semibold text-lg px-8 py-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 border-2"
-                style={{ borderColor: '#a28b6d', color: '#35271c', backgroundColor: 'transparent' }}
+                onClick={() => setIsCalendlyOpen(true)}
+                className="group px-8 py-4 rounded-lg font-bold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+                style={{ backgroundColor: '#a28b6d', color: '#35271c', border: '2px solid #35271c' }}
               >
-                See How It Works
-                <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                Get Started Today
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button
+                onClick={scrollToHowItWorks}
+                className="group px-8 py-4 rounded-lg font-bold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+                style={{ backgroundColor: 'rgba(162, 139, 109, 0.1)', color: '#a28b6d', border: '2px solid #a28b6d' }}
+              >
+                How it Works
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </motion.div>
 
@@ -126,7 +133,8 @@ export default function HeroSection() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6"
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-x-8 gap-y-4 mt-8"
+              data-version="v2"
             >
               <div className="flex items-center gap-2">
                 <CheckCircle size={20} className="text-green-500" />
@@ -194,22 +202,23 @@ export default function HeroSection() {
 
           {/* Right: Floating lead card - desktop only */}
           <div
-            className="hidden lg:block"
+            className="hidden lg:flex lg:items-end lg:justify-center"
             style={{
               animation: 'slideInRight 0.8s ease-out 0.2s both',
             }}
+            data-version="v3-centered"
           >
             <div
               ref={cardRef}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
-              className="relative"
+              className="relative w-full max-w-xl mx-auto"
               style={{
                 perspective: '1000px',
               }}
             >
               <div
-                className="bg-card border border-border rounded-lg p-6 transition-transform duration-200 ease-out"
+                className="bg-card border border-border rounded-lg p-8 transition-transform duration-200 ease-out shadow-2xl"
                 style={{
                   transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
                 }}
@@ -265,9 +274,36 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
+
+      {/* Calendly Popup Modal */}
+      <PopupModal
+        url="https://calendly.com/jason-boundlesscorp/30min"
+        onModalClose={() => setIsCalendlyOpen(false)}
+        open={isCalendlyOpen}
+        rootElement={typeof document !== 'undefined' ? document.body : undefined}
+      />
     </section>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
