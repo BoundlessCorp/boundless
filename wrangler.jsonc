@@ -8,7 +8,6 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "boundless",
 	"pages_build_output_dir": "./dist",
-	"main": "./dist/_worker.js/index.js",
 	"compatibility_date": "2025-04-15",
 	"compatibility_flags": [
 		"nodejs_compat"
