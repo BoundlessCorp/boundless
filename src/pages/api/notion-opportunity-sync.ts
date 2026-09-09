@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 
 interface OpportunitySyncBody {
+  // Our custom webhook fields
   opportunityId?: string;
   opportunityName?: string;
   estimatedValue?: number | string;
@@ -8,6 +9,14 @@ interface OpportunitySyncBody {
   pipelineStage?: string;
   leadSource?: string;
   expectedCloseDate?: string;
+
+  // GHL standard webhook fields
+  id?: string;
+  opportunity_name?: string;
+  lead_value?: number | string;
+  status?: string;
+  pipleline_stage?: string;
+  opportunity_source?: string;
 }
 
 const NOTION_VERSION = '2026-03-11';
@@ -36,15 +45,25 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const body = (await request.json()) as OpportunitySyncBody;
 
-    const {
-      opportunityId,
-      opportunityName,
-      estimatedValue,
-      opportunityStatus,
-      pipelineStage,
-      leadSource,
-      expectedCloseDate,
-    } = body;
+    const opportunityId = body.opportunityId || body.id;
+
+const opportunityName =
+  body.opportunityName || body.opportunity_name;
+
+const estimatedValue =
+  body.estimatedValue ?? body.lead_value;
+
+const opportunityStatus =
+  body.opportunityStatus || body.status;
+
+const pipelineStage =
+  body.pipelineStage || body.pipleline_stage;
+
+const leadSource =
+  body.leadSource || body.opportunity_source;
+
+const expectedCloseDate =
+  body.expectedCloseDate;
 
     console.log('Received opportunity sync:', {
       opportunityId,
