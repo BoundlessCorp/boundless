@@ -218,17 +218,17 @@ const PricingSection = () => {
             We'll walk you through exactly what your business needs and show you how this can generate ROI before you commit.
           </p>
           <a
-            href="https://calendly.com/jason-boundlesscorp/30min"
+            href="https://go.boundlesscorp.ca/widget/bookings/boundless-growth-call"
             className="group inline-flex items-center gap-2 font-heading font-bold text-lg px-8 py-4 rounded-lg transition-all duration-300 shadow-lg border"
             style={{ backgroundColor: '#a28b6d', borderColor: '#35271c', color: '#35271c' }}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#937d5f'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#a28b6d'}
           >
-            <span>Book a Free Strategy Call</span>
+            <span>Book a Free Discovery Call</span>
             <ArrowRight size={20} className="opacity-0 group-hover:opacity-100 transition-opacity -ml-2 group-hover:ml-0" />
           </a>
           <p className="text-sm text-obsidian/60 mt-4 font-mono">
-            Free · No obligation · See real ROI projections
+            Free · No obligation · 30 minutes
           </p>
         </motion.div>
       </div>
