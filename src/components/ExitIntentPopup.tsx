@@ -47,7 +47,12 @@ export default function ExitIntentPopup({ showPreview = false }: ExitIntentPopup
       const response = await fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name: '', message: 'Exit intent popup signup' })
+        body: JSON.stringify({
+          email,
+          name: '',
+          message: 'Exit intent popup signup',
+          source: 'Website Exit Intent Popup',
+        })
       });
 
       const data = await response.json() as { success?: boolean; error?: string };
