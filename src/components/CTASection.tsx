@@ -1,7 +1,5 @@
-
-
 import { useState } from 'react';
-import { ArrowRight, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle } from 'lucide-react';
 import { baseUrl } from '../lib/base-url';
 
 export default function CTASection() {
@@ -52,11 +50,11 @@ export default function CTASection() {
   };
 
   return (
-    <section id="booking" className="relative py-32 lg:py-48 overflow-hidden" style={{ backgroundColor: '#a28b6d' }}>
-      <div className="max-w-7xl mx-auto px-6 lg:px-10">
-        <div className="max-w-3xl mx-auto bg-chalk rounded-2xl shadow-2xl p-8 lg:p-12 border border-primary/10">
-          <div className="text-center">
-            <div className="font-mono text-xs tracking-wider uppercase mb-4" style={{ color: '#35271c' }}>
+    <section id="booking" className="relative pt-24 pb-44 sm:py-32 lg:py-48 overflow-hidden" style={{ backgroundColor: '#a28b6d' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+        <div className="max-w-3xl mx-auto bg-chalk rounded-2xl shadow-2xl p-4 sm:p-8 lg:p-12 border border-primary/10">
+          <div className="text-center px-1 sm:px-0">
+            <div className="font-mono text-[11px] sm:text-xs tracking-wider uppercase mb-4" style={{ color: '#35271c' }}>
               09 / Ready to Transform Your Business?
             </div>
             <h2 className="font-heading font-black text-foreground text-4xl sm:text-5xl lg:text-6xl tracking-tighter">
@@ -64,14 +62,14 @@ export default function CTASection() {
               <br />
               <span className="text-primary">Your Pipeline?</span>
             </h2>
-            <p className="mt-6 text-muted-foreground text-lg font-body leading-relaxed max-w-xl mx-auto">
+            <p className="mt-5 sm:mt-6 text-muted-foreground text-base sm:text-lg font-body leading-relaxed max-w-xl mx-auto">
               Request a free 30-minute discovery call. We'll analyze your current situation and show you
               exactly how we'd build your system. No pressure, no hard sell.
             </p>
           </div>
 
           {submitStatus === 'success' ? (
-            <div className="mt-12 text-center bg-primary/5 border border-primary/20 rounded-lg p-12">
+            <div className="mt-8 sm:mt-12 text-center bg-primary/5 border border-primary/20 rounded-xl p-6 sm:p-12">
               <CheckCircle size={48} className="text-primary mx-auto mb-4" />
               <h3 className="font-heading font-bold text-foreground text-2xl tracking-tight">
                 You're In. We'll Be in Touch.
@@ -83,11 +81,11 @@ export default function CTASection() {
           ) : (
             <form
               onSubmit={handleSubmit}
-              className="mt-12 bg-background/50 border border-border/50 rounded-lg p-8 lg:p-10"
+              className="mt-8 sm:mt-12 bg-background/50 border border-border/50 rounded-xl p-4 sm:p-8 lg:p-10"
             >
-              <div className="grid sm:grid-cols-2 gap-5">
+              <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
                 <div>
-                  <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider block mb-2">
+                  <label className="font-mono text-[11px] sm:text-xs text-muted-foreground uppercase tracking-wider block mb-2">
                     Your Name
                   </label>
                   <input
@@ -96,12 +94,12 @@ export default function CTASection() {
                     value={formData.name}
                     onChange={handleChange}
                     name="name"
-                    className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground font-body text-base placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+                    className="w-full min-w-0 bg-muted border border-input rounded-lg px-3.5 sm:px-4 py-3 text-foreground font-body text-sm sm:text-base placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
                     placeholder="John Smith"
                   />
                 </div>
                 <div>
-                  <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider block mb-2">
+                  <label className="font-mono text-[11px] sm:text-xs text-muted-foreground uppercase tracking-wider block mb-2">
                     Email
                   </label>
                   <input
@@ -110,12 +108,12 @@ export default function CTASection() {
                     value={formData.email}
                     onChange={handleChange}
                     name="email"
-                    className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground font-body text-base placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+                    className="w-full min-w-0 bg-muted border border-input rounded-lg px-3.5 sm:px-4 py-3 text-foreground font-body text-sm sm:text-base placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
                     placeholder="john@company.com"
                   />
                 </div>
                 <div>
-                  <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider block mb-2">
+                  <label className="font-mono text-[11px] sm:text-xs text-muted-foreground uppercase tracking-wider block mb-2">
                     Phone
                   </label>
                   <input
@@ -124,12 +122,12 @@ export default function CTASection() {
                     value={formData.phone}
                     onChange={handleChange}
                     name="phone"
-                    className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground font-body text-base placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+                    className="w-full min-w-0 bg-muted border border-input rounded-lg px-3.5 sm:px-4 py-3 text-foreground font-body text-sm sm:text-base placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
                     placeholder="(604) 555-0123"
                   />
                 </div>
                 <div>
-                  <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider block mb-2">
+                  <label className="font-mono text-[11px] sm:text-xs text-muted-foreground uppercase tracking-wider block mb-2">
                     Business Name
                   </label>
                   <input
@@ -138,7 +136,7 @@ export default function CTASection() {
                     value={formData.business}
                     onChange={handleChange}
                     name="business"
-                    className="w-full bg-muted border border-input rounded-lg px-4 py-3 text-foreground font-body text-base placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+                    className="w-full min-w-0 bg-muted border border-input rounded-lg px-3.5 sm:px-4 py-3 text-foreground font-body text-sm sm:text-base placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
                     placeholder="ABC Painting Co."
                   />
                 </div>
@@ -153,8 +151,8 @@ export default function CTASection() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full font-heading font-bold text-lg px-8 py-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border mt-6"
-                style={{ 
+                className="w-full font-heading font-bold text-base sm:text-lg px-4 sm:px-8 py-3.5 sm:py-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 border mt-5 sm:mt-6"
+                style={{
                   backgroundColor: isSubmitting ? '#7a6552' : '#a28b6d',
                   color: '#35271c',
                   borderColor: '#35271c'
@@ -167,18 +165,19 @@ export default function CTASection() {
                   </>
                 ) : (
                   <>
-                    Request My Discovery Call
-                    <ArrowRight size={20} />
+                    <span className="sm:hidden">Request Discovery Call</span>
+                    <span className="hidden sm:inline">Request My Discovery Call</span>
+                    <ArrowRight size={19} className="flex-shrink-0" />
                   </>
                 )}
               </button>
 
-              <div className="flex items-center justify-center gap-4 mt-4 text-muted-foreground text-xs font-mono">
-                <span>✓ 100% Free</span>
-                <span className="w-px h-3 bg-border" />
-                <span>✓ No Obligation</span>
-                <span className="w-px h-3 bg-border" />
-                <span>✓ 30 Minutes</span>
+              <div className="grid grid-cols-1 gap-2.5 mt-4 text-muted-foreground text-xs font-mono sm:flex sm:items-center sm:justify-center sm:gap-4">
+                <span className="flex items-center justify-center rounded-md border border-border/60 bg-white/60 px-3 py-2 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">✓ 100% Free</span>
+                <span className="hidden sm:block w-px h-3 bg-border" />
+                <span className="flex items-center justify-center rounded-md border border-border/60 bg-white/60 px-3 py-2 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">✓ No Obligation</span>
+                <span className="hidden sm:block w-px h-3 bg-border" />
+                <span className="flex items-center justify-center rounded-md border border-border/60 bg-white/60 px-3 py-2 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">✓ 30 Minutes</span>
               </div>
             </form>
           )}
@@ -187,16 +186,3 @@ export default function CTASection() {
     </section>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
