@@ -7,7 +7,7 @@ const packages = [
   {
     name: 'Starter',
     subtitle: 'Stop Losing Leads',
-    price: '$397',
+    price: '$497',
     period: '/month',
     paymentLink: 'https://buy.stripe.com/14A00jdyhg4kcnZ5Dx3Nm07', // Your Stripe Payment Link
     description: 'Best for businesses that already get inquiries but are not consistently following up or converting them.',
