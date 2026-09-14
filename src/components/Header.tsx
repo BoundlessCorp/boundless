@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Menu, X, Phone } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { PopupModal } from 'react-calendly';
+import { Menu, X } from 'lucide-react';
 import { baseUrl } from '../lib/base-url';
+
+const DISCOVERY_CALL_URL = 'https://go.boundlesscorp.ca/widget/bookings/boundless-growth-call';
 
 interface HeaderProps {
   backgroundColor?: string;
@@ -14,7 +14,6 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
   const [activeSection, setActiveSection] = useState('');
   const lastScrollY = useRef(0);
   const [atTop, setAtTop] = useState(true);
-  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -81,6 +80,11 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
     window.location.href = baseUrl || '/';
   };
 
+  const openDiscoveryCall = () => {
+    setMobileOpen(false);
+    window.location.href = DISCOVERY_CALL_URL;
+  };
+
   const navItems = [
     { label: 'Services', id: 'offer' },
     { label: 'Process', id: 'how-it-works' },
@@ -121,14 +125,14 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
                     key={item.id || item.href}
                     onClick={() => handleNavClick(item)}
                     className={`font-mono text-xs transition-all duration-200 uppercase tracking-wider relative ${
-                      isActive 
-                        ? 'text-signal font-bold' 
+                      isActive
+                        ? 'text-signal font-bold'
                         : 'text-muted-foreground hover:text-background'
                     }`}
                   >
                     {item.label}
                     {isActive && (
-                      <span 
+                      <span
                         className="absolute -bottom-1 left-0 right-0 h-0.5 bg-signal rounded-full"
                         style={{ animation: 'slideIn 0.3s ease-out' }}
                       />
@@ -141,7 +145,7 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center gap-4">
               <button
-                onClick={() => setIsCalendlyOpen(true)}
+                onClick={openDiscoveryCall}
                 className="px-6 py-2 rounded-lg font-bold transition-all duration-300 hover:scale-105"
                 style={{ backgroundColor: '#a28b6d', color: '#35271c', border: '2px solid #35271c' }}
               >
@@ -190,60 +194,16 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
             })}
             <div className="mt-6 pt-6 border-t border-border">
               <button
-                onClick={() => scrollTo('booking')}
+                onClick={openDiscoveryCall}
                 className="w-full font-heading font-bold text-lg text-primary-foreground py-4 rounded-lg border"
                 style={{ backgroundColor: '#a28b6d', borderColor: '#35271c' }}
               >
-                Book a Free Call →
+                Book a Free Discovery Call →
               </button>
             </div>
           </nav>
         </div>
       )}
-
-      <AnimatePresence>
-        {isCalendlyOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-          >
-            <div
-              className="absolute inset-0 bg-black/50"
-              onClick={() => setIsCalendlyOpen(false)}
-            />
-            <div className="relative z-10 w-full max-w-md bg-white border border-border rounded-lg shadow-xl p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <Phone size={18} />
-                <h2 className="font-heading text-lg font-semibold text-signal">Book a Call</h2>
-              </div>
-              <p className="text-muted-foreground mb-4">
-                Schedule a 30-minute call with Jason to discuss your painting business.
-              </p>
-              <div className="mt-4">
-                <button
-                  onClick={() => {
-                    setIsCalendlyOpen(true);
-                  }}
-                  className="w-full px-6 py-3 rounded-lg font-bold transition-all duration-300"
-                  style={{ backgroundColor: '#a28b6d', color: '#35271c' }}
-                >
-                  Schedule Call
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Calendly Popup Modal */}
-      <PopupModal
-        url="https://calendly.com/jason-boundlesscorp/30min"
-        onModalClose={() => setIsCalendlyOpen(false)}
-        open={isCalendlyOpen}
-        rootElement={typeof document !== 'undefined' ? document.body : undefined}
-      />
 
       <style>{`
         @keyframes fadeIn {
@@ -256,7 +216,7 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
             transform: translateY(0);
           }
         }
-        
+
         @keyframes slideIn {
           from {
             transform: scaleX(0);
@@ -269,15 +229,3 @@ export default function Header({ backgroundColor }: HeaderProps = {}) {
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
