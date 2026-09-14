@@ -26,6 +26,12 @@ export default function HeroSection() {
     }
   };
 
+  const mobileWorkflow = [
+    { step: '01', title: 'Capture', detail: 'Bring new leads into one place' },
+    { step: '02', title: 'Follow Up', detail: 'Move opportunities through the pipeline' },
+    { step: '03', title: 'Measure', detail: 'Track outcomes and improve what works' },
+  ];
+
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20" style={{ backgroundColor: '#faf8f5' }}>
       <img
@@ -73,14 +79,14 @@ export default function HeroSection() {
             </p>
 
             <motion.div
-              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8"
+              className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start mb-7 sm:mb-8"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
             >
               <a
                 href="https://go.boundlesscorp.ca/widget/bookings/boundless-growth-call"
-                className="group px-8 py-4 rounded-lg font-bold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+                className="group w-full sm:w-auto max-w-sm mx-auto sm:mx-0 px-8 py-4 rounded-lg font-bold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
                 style={{ backgroundColor: '#a28b6d', color: '#35271c', border: '2px solid #35271c' }}
               >
                 Book a Discovery Call
@@ -88,7 +94,7 @@ export default function HeroSection() {
               </a>
               <button
                 onClick={scrollToHowItWorks}
-                className="group px-8 py-4 rounded-lg font-bold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
+                className="group w-full sm:w-auto max-w-sm mx-auto sm:mx-0 px-8 py-4 rounded-lg font-bold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
                 style={{ backgroundColor: 'rgba(162, 139, 109, 0.1)', color: '#a28b6d', border: '2px solid #a28b6d' }}
               >
                 How it Works
@@ -100,30 +106,54 @@ export default function HeroSection() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-x-8 gap-y-4 mt-8"
+              className="grid grid-cols-1 gap-2.5 mt-7 sm:flex sm:flex-wrap sm:items-center sm:justify-center lg:justify-start sm:gap-x-8 sm:gap-y-4 sm:mt-8"
             >
-              <div className="flex items-center gap-2">
-                <CheckCircle size={20} className="text-green-500" />
-                <span className="font-body text-sm text-gray-600">Founder-Led at Launch</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle size={20} className="text-green-500" />
-                <span className="font-body text-sm text-gray-600">Built for Painting Companies</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle size={20} className="text-green-500" />
-                <span className="font-body text-sm text-gray-600">Evidence-Based Optimization</span>
-              </div>
+              {[
+                'Founder-Led at Launch',
+                'Built for Painting Companies',
+                'Evidence-Based Optimization',
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="flex items-center justify-center sm:justify-start gap-2.5 rounded-lg border border-gray-200 bg-white/70 px-4 py-2.5 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0"
+                >
+                  <CheckCircle size={19} className="text-green-500 flex-shrink-0" />
+                  <span className="font-body text-sm text-gray-600">{item}</span>
+                </div>
+              ))}
             </motion.div>
           </motion.div>
 
-          <div className="lg:hidden -mt-4 mb-12">
-            <div className="bg-card border border-border rounded-lg p-6">
-              <div className="font-mono text-xs text-muted-foreground uppercase tracking-wider mb-4">Example Growth Workflow</div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-muted/50 rounded-md p-3 text-center"><div className="font-heading font-bold text-foreground text-lg">Capture</div><div className="font-mono text-[10px] text-muted-foreground uppercase mt-1">Leads</div></div>
-                <div className="bg-muted/50 rounded-md p-3 text-center"><div className="font-heading font-bold text-foreground text-lg">Follow Up</div><div className="font-mono text-[10px] text-muted-foreground uppercase mt-1">Pipeline</div></div>
-                <div className="bg-muted/50 rounded-md p-3 text-center"><div className="font-heading font-bold text-foreground text-lg">Measure</div><div className="font-mono text-[10px] text-muted-foreground uppercase mt-1">Outcomes</div></div>
+          <div className="lg:hidden mt-1 mb-10">
+            <div className="bg-white/85 backdrop-blur-sm border border-gray-200 rounded-2xl p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <div className="font-mono text-[11px] text-muted-foreground uppercase tracking-[0.12em]">
+                  Example Growth Workflow
+                </div>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                  Illustrative
+                </span>
+              </div>
+
+              <div className="space-y-2.5">
+                {mobileWorkflow.map((item, index) => (
+                  <div key={item.step}>
+                    <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-mono text-xs font-bold" style={{ backgroundColor: 'rgba(162, 139, 109, 0.14)', color: '#7a6552' }}>
+                        {item.step}
+                      </div>
+                      <div className="min-w-0 flex-1 text-left">
+                        <div className="font-heading font-bold text-base text-foreground leading-tight">{item.title}</div>
+                        <div className="font-body text-xs text-muted-foreground mt-1 leading-relaxed">{item.detail}</div>
+                      </div>
+                    </div>
+                    {index < mobileWorkflow.length - 1 && (
+                      <div className="flex justify-center h-4 items-center" aria-hidden="true">
+                        <ArrowRight size={15} className="text-primary rotate-90" />
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
