@@ -65,7 +65,7 @@ export default function CTASection() {
               <span className="text-primary">Your Pipeline?</span>
             </h2>
             <p className="mt-6 text-muted-foreground text-lg font-body leading-relaxed max-w-xl mx-auto">
-              Book a free 15-minute strategy call. We'll analyze your current situation and show you
+              Request a free 30-minute discovery call. We'll analyze your current situation and show you
               exactly how we'd build your system. No pressure, no hard sell.
             </p>
           </div>
@@ -167,7 +167,7 @@ export default function CTASection() {
                   </>
                 ) : (
                   <>
-                    Book My Free Strategy Call
+                    Request My Discovery Call
                     <ArrowRight size={20} />
                   </>
                 )}
@@ -178,7 +178,7 @@ export default function CTASection() {
                 <span className="w-px h-3 bg-border" />
                 <span>✓ No Obligation</span>
                 <span className="w-px h-3 bg-border" />
-                <span>✓ 15 Minutes</span>
+                <span>✓ 30 Minutes</span>
               </div>
             </form>
           )}
