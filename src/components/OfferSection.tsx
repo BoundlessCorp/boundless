@@ -1,7 +1,5 @@
 import { Check, Shield, ArrowRight, Sparkles, Clock, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { PopupModal } from 'react-calendly';
 
 const included = [
   'Custom High-Converting Website',
@@ -15,8 +13,6 @@ const included = [
 ];
 
 const OfferSection = () => {
-  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
-
   const guarantees = [
     {
       icon: Shield,
@@ -62,7 +58,7 @@ const OfferSection = () => {
               </div>
 
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6" style={{ color: '#35271c' }}>
-                Launch Special: Starting from $397/month
+                Launch Special: Starting from $497/month
               </h2>
 
               <p className="mt-6 text-base md:text-lg font-body leading-relaxed" style={{ color: '#35271c', opacity: 0.8 }}>
@@ -87,8 +83,8 @@ const OfferSection = () => {
               </div>
 
               <div className="mt-8 pt-8" style={{ borderTop: '1px solid rgba(53, 39, 28, 0.1)' }}>
-                <button
-                  onClick={() => setIsCalendlyOpen(true)}
+                <a
+                  href="https://go.boundlesscorp.ca/widget/bookings/boundless-growth-call"
                   className="group w-full relative font-heading font-bold text-sm md:text-base py-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 border"
                   style={{ backgroundColor: '#a28b6d', borderColor: '#35271c', color: '#35271c' }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c4935a'}
@@ -98,9 +94,9 @@ const OfferSection = () => {
                   <span className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     Lock In Your Spot <ArrowRight size={18} />
                   </span>
-                </button>
+                </a>
                 <p className="text-center text-xs font-mono mt-4" style={{ color: '#7a6552' }}>
-                  Limited spots available · Free strategy call · No obligation
+                  Limited spots available · Free discovery call · No obligation
                 </p>
               </div>
             </div>
@@ -133,36 +129,8 @@ const OfferSection = () => {
           </div>
         </motion.div>
       </div>
-
-      {/* Calendly Popup Modal */}
-      <PopupModal
-        url="https://calendly.com/jason-boundlesscorp/30min"
-        onModalClose={() => setIsCalendlyOpen(false)}
-        open={isCalendlyOpen}
-        rootElement={typeof document !== 'undefined' ? document.body : undefined}
-      />
     </section>
   );
 };
 
 export default OfferSection;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

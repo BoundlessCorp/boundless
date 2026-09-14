@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ArrowRight, Phone, TrendingUp, Sparkles, CheckCircle, CheckCircle2, DollarSign, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { PopupModal } from 'react-calendly';
 
 export default function HeroSection() {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -11,7 +10,6 @@ export default function HeroSection() {
     activeCampaigns: 23,
     conversionRate: 34,
   });
-  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -70,7 +68,7 @@ export default function HeroSection() {
       
       {/* Subtle pattern overlay */}
       <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4h-4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
       }} />
 
       <div className="relative max-w-7xl mx-auto px-6 lg:px-10 relative z-10">
@@ -110,14 +108,14 @@ export default function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
             >
-              <button
-                onClick={() => setIsCalendlyOpen(true)}
+              <a
+                href="https://go.boundlesscorp.ca/widget/bookings/boundless-growth-call"
                 className="group px-8 py-4 rounded-lg font-bold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
                 style={{ backgroundColor: '#a28b6d', color: '#35271c', border: '2px solid #35271c' }}
               >
                 Get Started Today
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </a>
               <button
                 onClick={scrollToHowItWorks}
                 className="group px-8 py-4 rounded-lg font-bold transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
@@ -274,56 +272,6 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
-
-      {/* Calendly Popup Modal */}
-      <PopupModal
-        url="https://calendly.com/jason-boundlesscorp/30min"
-        onModalClose={() => setIsCalendlyOpen(false)}
-        open={isCalendlyOpen}
-        rootElement={typeof document !== 'undefined' ? document.body : undefined}
-      />
     </section>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
