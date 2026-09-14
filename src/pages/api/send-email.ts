@@ -33,15 +33,18 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // Parse request body
     const body = await request.json() as EmailRequestBody;
     const { name, email, phone, business, message, source } = body;
+    const isExitIntent = source === 'Website Exit Intent Popup';
+    const displayName = name || (isExitIntent ? 'Exit Intent Subscriber' : 'Website Lead');
 
     console.log('Received form data:', { name, email, phone, business, source });
 
-    // Validate required fields
-    if (!name || !email) {
+    // Email is always required. Name is required for normal contact submissions,
+    // but exit-intent signups are intentionally email-only.
+    if (!email || (!isExitIntent && !name)) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'Name and email are required' 
+          error: isExitIntent ? 'Email is required' : 'Name and email are required' 
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
@@ -53,7 +56,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
       from: 'Boundless Leads <noreply@boundlesscorp.ca>',
       to: ['jason@boundlesscorp.ca'],
       replyTo: email,
-      subject: `New Lead from ${name} - ${source || 'Website'}`,
+      subject: `New Lead from ${displayName} - ${source || 'Website'}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -91,7 +94,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
                 
                 <div class="field">
                   <div class="label">Name</div>
-                  <div class="value">${name}</div>
+                  <div class="value">${displayName}</div>
                 </div>
                 
                 <div class="field">
@@ -120,7 +123,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
                   </div>
                 ` : ''}
                 
-                <a href="mailto:${email}" class="cta">Reply to ${name} →</a>
+                <a href="mailto:${email}" class="cta">Reply to ${displayName} →</a>
                 
                 <div class="footer">
                   <p>This lead was submitted from your Boundless website.<br>
@@ -147,8 +150,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     console.log('Email sent successfully:', data);
 
-    // Optionally send auto-responder to lead
-    if (email) {
+    // Only send the normal contact-form auto-responder when we have a name.
+    // Exit-intent signups are email-only and should not receive a broken "Hi ," email.
+    if (email && name) {
       console.log('Sending auto-responder to:', email);
       await resend.emails.send({
         from: 'Boundless <noreply@boundlesscorp.ca>',
@@ -181,7 +185,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
                   <p><strong>What happens next?</strong></p>
                   <ul>
                     <li>We'll review your information and respond within 2 hours (usually faster!)</li>
-                    <li>We'll schedule a free 15-minute strategy call to discuss your goals</li>
+                    <li>We'll schedule a free 30-minute discovery call to discuss your goals</li>
                     <li>We'll show you exactly how we can help you get more qualified leads</li>
                   </ul>
                   
@@ -224,7 +228,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
     );
   }
 };
-
 
 
 
