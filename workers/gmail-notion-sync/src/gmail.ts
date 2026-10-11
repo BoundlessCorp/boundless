@@ -3,6 +3,20 @@ import type { Env, GmailHistoryResponse, GmailMessage } from "./types";
 
 const GMAIL_API = "https://gmail.googleapis.com/gmail/v1";
 
+export class GmailApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "GmailApiError";
+  }
+}
+
+export function isExpiredHistoryError(error: unknown): boolean {
+  return error instanceof GmailApiError && error.status === 404;
+}
+
 async function gmailFetch<T>(env: Env, path: string, init?: RequestInit): Promise<T> {
   const token = await getGoogleAccessToken(env);
   const response = await fetch(`${GMAIL_API}${path}`, {
@@ -16,9 +30,7 @@ async function gmailFetch<T>(env: Env, path: string, init?: RequestInit): Promis
 
   if (!response.ok) {
     const detail = await response.text();
-    const error = new Error(`Gmail API ${response.status}: ${detail}`);
-    (error as Error & { status?: number }).status = response.status;
-    throw error;
+    throw new GmailApiError(response.status, `Gmail API ${response.status}: ${detail}`);
   }
 
   return response.json<T>();
