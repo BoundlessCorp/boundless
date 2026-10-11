@@ -295,12 +295,88 @@ export async function verifyReconciliation(
 export function companyAuditSnapshot(company: NotionPage) {
   return {
     companyName: propertyText(company, "Company Name"),
+    primaryContactEmail: propertyText(company, "Primary Contact Email"),
     prospectStatus: propertySelect(company, "Prospect Status"),
     lastContact: propertyDate(company, "Last Contact"),
+    outreachQaStatus: propertySelect(company, "Outreach QA Status"),
     draftReleaseStatus: propertySelect(company, "Draft Release Status"),
     canonicalDraftId: propertyText(company, "Canonical Draft ID"),
     qaPassedMessageId: propertyText(company, "QA Passed Message ID"),
     founderApprovedDraftId: propertyText(company, "Founder Approved Draft ID"),
     founderApprovedMessageId: propertyText(company, "Founder Approved Message ID"),
+    founderApprovedAt: propertyDate(company, "Founder Approved At"),
   };
+}
+
+export function assertCompanyApprovalForDraft(
+  company: NotionPage,
+  input: {
+    draftId: string;
+    draftMessageId: string;
+    recipient: string;
+  },
+) {
+  const snapshot = companyAuditSnapshot(company);
+  const errors: string[] = [];
+
+  if (snapshot.outreachQaStatus !== "PASS") errors.push("Outreach QA Status must be PASS");
+  if (snapshot.draftReleaseStatus !== "APPROVED") errors.push("Draft Release Status must be APPROVED");
+  if (snapshot.canonicalDraftId !== input.draftId) errors.push("Canonical Draft ID mismatch");
+  if (snapshot.qaPassedMessageId !== input.draftMessageId) errors.push("QA Passed Message ID mismatch");
+  if (snapshot.founderApprovedDraftId !== input.draftId) errors.push("Founder Approved Draft ID mismatch");
+  if (snapshot.founderApprovedMessageId !== input.draftMessageId) {
+    errors.push("Founder Approved Message ID mismatch");
+  }
+  if (!snapshot.founderApprovedAt) errors.push("Founder Approved At is missing");
+  if (snapshot.primaryContactEmail.trim().toLowerCase() !== input.recipient.trim().toLowerCase()) {
+    errors.push("Primary Contact Email does not match Gmail draft recipient");
+  }
+
+  if (errors.length) {
+    throw new Error(`Approval snapshot refused: ${errors.join("; ")}`);
+  }
+
+  return snapshot;
+}
+
+export async function finalizeCompanyReleaseAfterExactSent(
+  env: Env,
+  input: {
+    companyPageId: string;
+    gmailDraftId: string;
+    draftMessageId: string;
+  },
+): Promise<void> {
+  const company = await fetchPage(env, input.companyPageId);
+  const before = companyAuditSnapshot(company);
+
+  assertCompanyApprovalForDraft(company, {
+    draftId: input.gmailDraftId,
+    draftMessageId: input.draftMessageId,
+    recipient: before.primaryContactEmail,
+  });
+
+  await notionFetch(env, `/pages/${input.companyPageId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      properties: {
+        "Draft Release Status": select("SENT"),
+        "Canonical Draft ID": richText(""),
+      },
+    }),
+  });
+
+  const after = companyAuditSnapshot(await fetchPage(env, input.companyPageId));
+  if (after.draftReleaseStatus !== "SENT" || after.canonicalDraftId !== "") {
+    throw new Error("Release-state read-back failed after exact approved SENT");
+  }
+
+  if (
+    before.qaPassedMessageId !== after.qaPassedMessageId ||
+    before.founderApprovedDraftId !== after.founderApprovedDraftId ||
+    before.founderApprovedMessageId !== after.founderApprovedMessageId ||
+    before.founderApprovedAt !== after.founderApprovedAt
+  ) {
+    throw new Error("Release-state safety invariant failed: approval audit fields changed");
+  }
 }
