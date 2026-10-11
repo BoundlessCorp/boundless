@@ -27,25 +27,52 @@ async function processOutboundMessage(env: Env, message: GmailMessage): Promise<
 
   const recipient = extractSingleRecipient(message);
   if (!recipient) {
-    throw new Error(`Unsafe recipient shape for SENT message ${message.id}; exactly one valid To address is required`);
+    // Multi-recipient or malformed outbound mail is outside V0.1's controlled
+    // prospect-reconciliation contract. Ignore it rather than poison the cursor.
+    return "skipped";
+  }
+
+  const company = await findCompanyByPrimaryEmail(env, recipient);
+  if (!company) {
+    // The Gmail account can send ordinary non-prospect mail. Zero Company matches
+    // is therefore a safe ignore; more than one match still fails in the adapter.
+    return "skipped";
   }
 
   const existingEvent = await findOutreachEventByProviderMessageId(env, message.id);
   if (existingEvent) {
+    const existingType =
+      existingEvent.properties["Event Type"]?.select?.name === "Follow-Up" ? "Follow-Up" : "First Touch";
+    const sentAt = message.internalDate
+      ? new Date(Number(message.internalDate)).toISOString()
+      : new Date().toISOString();
+
     const claim = await claimMessage(env, {
       providerMessageId: message.id,
       providerThreadId: message.threadId,
       direction: "Outbound",
-      eventType: "Existing",
+      eventType: existingType,
       gmailInternalDate: message.internalDate,
     });
-    if (claim !== "already_succeeded") {
-      await completeMessage(env, message.id, null, existingEvent.id);
+    if (claim === "already_succeeded") return "already_done";
+    if (claim === "busy") throw new Error(`Message ${message.id} is already being processed under a live lease`);
+
+    try {
+      await reconcileCompanyAfterOutbound(env, company, existingType, sentAt);
+      await verifyReconciliation(env, {
+        providerMessageId: message.id,
+        companyPageId: company.id,
+        eventPageId: existingEvent.id,
+        sentAt,
+      });
+      await completeMessage(env, message.id, company.id, existingEvent.id);
+      return "already_done";
+    } catch (error) {
+      await failMessage(env, message.id, error instanceof Error ? error.message : String(error));
+      throw error;
     }
-    return "already_done";
   }
 
-  const company = await findCompanyByPrimaryEmail(env, recipient);
   const priorOutbound = await hasPriorOutboundInThread(env, message.threadId);
   const eventType = priorOutbound ? "Follow-Up" : "First Touch";
 
@@ -77,6 +104,7 @@ async function processOutboundMessage(env: Env, message: GmailMessage): Promise<
     });
 
     const afterCompany = await findCompanyByPrimaryEmail(env, recipient);
+    if (!afterCompany) throw new Error("Read-back failed: Company disappeared after reconciliation");
     const after = companyAuditSnapshot(afterCompany);
 
     // Immutable audit fields must be preserved by V0.1.
