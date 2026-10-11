@@ -1,3 +1,4 @@
+import { canFinalizeRelease } from "./policy";
 import { contentFingerprint } from "./fingerprint";
 import { extractSingleRecipient, getDraft, getFullMessage, header } from "./gmail";
 import {
@@ -94,26 +95,59 @@ export async function captureApprovedDraft(
   return saveApprovedDraft(env, snapshot);
 }
 
+export interface ApprovedSentInspection {
+  hasSnapshot: boolean;
+  matched: boolean;
+  approvalId?: string;
+  mismatchReasons: string[];
+}
+
+export async function inspectApprovedSent(
+  env: Env,
+  company: NotionPage,
+  metadataMessage: GmailMessage,
+  recipient: string,
+): Promise<ApprovedSentInspection> {
+  const snapshot = await getActiveApprovedDraft(env, company.id);
+  if (!snapshot) {
+    return { hasSnapshot: false, matched: false, mismatchReasons: [] };
+  }
+
+  const fullMessage = await getFullMessage(env, metadataMessage.id);
+  const fingerprint = await contentFingerprint(fullMessage);
+  const errors = approvalMismatchReasons(snapshot, fullMessage, recipient, fingerprint);
+
+  return {
+    hasSnapshot: true,
+    matched: errors.length === 0,
+    approvalId: snapshot.approvalId,
+    mismatchReasons: errors,
+  };
+}
+
 export async function verifyAndMaybeFinalizeApprovedSent(
   env: Env,
   company: NotionPage,
   metadataMessage: GmailMessage,
   recipient: string,
 ): Promise<ApprovedSentMatch> {
-  const snapshot = await getActiveApprovedDraft(env, company.id);
-  if (!snapshot) return { hasSnapshot: false, matched: false, finalized: false };
+  const inspection = await inspectApprovedSent(env, company, metadataMessage, recipient);
+  if (!inspection.hasSnapshot) {
+    return { hasSnapshot: false, matched: false, finalized: false };
+  }
 
-  const fullMessage = await getFullMessage(env, metadataMessage.id);
-  const fingerprint = await contentFingerprint(fullMessage);
-  const errors = approvalMismatchReasons(snapshot, fullMessage, recipient, fingerprint);
-
-  if (errors.length > 0) {
+  if (!inspection.matched) {
     throw new Error(
-      `APPROVED_DRAFT_MISMATCH for company ${company.id}: ${errors.join("; ")}`,
+      `APPROVED_DRAFT_MISMATCH for company ${company.id}: ${inspection.mismatchReasons.join("; ")}`,
     );
   }
 
-  if (env.FINALIZE_RELEASE_STATE !== "true") {
+  const snapshot = await getActiveApprovedDraft(env, company.id);
+  if (!snapshot || snapshot.approvalId !== inspection.approvalId) {
+    throw new Error("Approved-draft snapshot changed during SENT verification");
+  }
+
+  if (!canFinalizeRelease(env.WRITE_MODE, env.FINALIZE_RELEASE_STATE)) {
     return {
       hasSnapshot: true,
       matched: true,
