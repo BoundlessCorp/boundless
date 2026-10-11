@@ -1,3 +1,4 @@
+import { verifyAndMaybeFinalizeApprovedSent } from "./approval";
 import { classifyOutboundEvent, greatestHistoryId } from "./policy";
 import type { Env, GmailMessage } from "./types";
 import {
@@ -62,7 +63,10 @@ async function processOutboundMessage(env: Env, message: GmailMessage): Promise<
       eventType: existingType,
       gmailInternalDate: message.internalDate,
     });
-    if (claim === "already_succeeded") return "already_done";
+    if (claim === "already_succeeded") {
+      await verifyAndMaybeFinalizeApprovedSent(env, company, message, recipient);
+      return "already_done";
+    }
     if (claim === "busy") throw new Error(`Message ${message.id} is already being processed under a live lease`);
 
     try {
@@ -73,6 +77,7 @@ async function processOutboundMessage(env: Env, message: GmailMessage): Promise<
         eventPageId: existingEvent.id,
         sentAt,
       });
+      await verifyAndMaybeFinalizeApprovedSent(env, company, message, recipient);
       await completeMessage(env, message.id, company.id, existingEvent.id);
       return "already_done";
     } catch (error) {
@@ -93,7 +98,10 @@ async function processOutboundMessage(env: Env, message: GmailMessage): Promise<
     gmailInternalDate: message.internalDate,
   });
 
-  if (claim === "already_succeeded") return "already_done";
+  if (claim === "already_succeeded") {
+    await verifyAndMaybeFinalizeApprovedSent(env, company, message, recipient);
+    return "already_done";
+  }
   if (claim === "busy") throw new Error(`Message ${message.id} is already being processed under a live lease`);
 
   try {
@@ -120,11 +128,13 @@ async function processOutboundMessage(env: Env, message: GmailMessage): Promise<
     if (
       before.qaPassedMessageId !== after.qaPassedMessageId ||
       before.founderApprovedDraftId !== after.founderApprovedDraftId ||
-      before.founderApprovedMessageId !== after.founderApprovedMessageId
+      before.founderApprovedMessageId !== after.founderApprovedMessageId ||
+      before.founderApprovedAt !== after.founderApprovedAt
     ) {
       throw new Error("Safety invariant failed: immutable QA/founder audit fields changed");
     }
 
+    await verifyAndMaybeFinalizeApprovedSent(env, afterCompany, message, recipient);
     await completeMessage(env, message.id, company.id, event.id);
     return "processed";
   } catch (error) {
