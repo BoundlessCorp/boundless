@@ -1,12 +1,19 @@
 import { classifyOutboundEvent, greatestHistoryId } from "./policy";
 import type { Env, GmailMessage } from "./types";
-import { extractSingleRecipient, getMessage, isExpiredHistoryError, isSent, listHistory } from "./gmail";
+import {
+  extractSingleRecipient,
+  getMessage,
+  getThread,
+  isExpiredHistoryError,
+  isSent,
+  listHistory,
+  threadHasPriorSent,
+} from "./gmail";
 import {
   companyAuditSnapshot,
   createOutboundEvent,
   findCompanyByPrimaryEmail,
   findOutreachEventByProviderMessageId,
-  hasPriorOutboundInThread,
   reconcileCompanyAfterOutbound,
   verifyReconciliation,
 } from "./notion";
@@ -74,7 +81,8 @@ async function processOutboundMessage(env: Env, message: GmailMessage): Promise<
     }
   }
 
-  const priorOutbound = await hasPriorOutboundInThread(env, message.threadId);
+  const thread = await getThread(env, message.threadId);
+  const priorOutbound = threadHasPriorSent(thread, message.id);
   const eventType = classifyOutboundEvent(priorOutbound);
 
   const claim = await claimMessage(env, {
