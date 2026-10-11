@@ -12,6 +12,7 @@ export interface Env {
 
   PROCESS_OUTBOUND: string;
   PROCESS_INBOUND: string;
+  WRITE_MODE: string;
   FINALIZE_RELEASE_STATE: string;
 
   GMAIL_OAUTH_CLIENT_ID: string;
