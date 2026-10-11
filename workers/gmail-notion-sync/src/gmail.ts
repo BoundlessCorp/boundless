@@ -1,5 +1,5 @@
 import { getGoogleAccessToken } from "./auth";
-import type { Env, GmailHistoryResponse, GmailMessage } from "./types";
+import type { Env, GmailHistoryResponse, GmailMessage, GmailThread } from "./types";
 
 const GMAIL_API = "https://gmail.googleapis.com/gmail/v1";
 
@@ -113,4 +113,23 @@ export function extractSingleRecipient(message: GmailMessage): string | null {
 
 export function isSent(message: GmailMessage): boolean {
   return message.labelIds?.includes("SENT") ?? false;
+}
+
+
+export async function getThread(env: Env, threadId: string): Promise<GmailThread> {
+  const params = new URLSearchParams({ format: "metadata" });
+  params.append("metadataHeaders", "To");
+  params.append("metadataHeaders", "From");
+  params.append("metadataHeaders", "Subject");
+
+  return gmailFetch(
+    env,
+    `/users/${encodeURIComponent(env.GMAIL_USER)}/threads/${encodeURIComponent(threadId)}?${params}`,
+  );
+}
+
+export function threadHasPriorSent(thread: GmailThread, currentMessageId: string): boolean {
+  return (thread.messages ?? []).some(
+    (message) => message.id !== currentMessageId && (message.labelIds?.includes("SENT") ?? false),
+  );
 }
