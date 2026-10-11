@@ -1,0 +1,104 @@
+import { getGoogleAccessToken } from "./auth";
+import type { Env, GmailHistoryResponse, GmailMessage } from "./types";
+
+const GMAIL_API = "https://gmail.googleapis.com/gmail/v1";
+
+async function gmailFetch<T>(env: Env, path: string, init?: RequestInit): Promise<T> {
+  const token = await getGoogleAccessToken(env);
+  const response = await fetch(`${GMAIL_API}${path}`, {
+    ...init,
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+      ...(init?.headers ?? {}),
+    },
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    const error = new Error(`Gmail API ${response.status}: ${detail}`);
+    (error as Error & { status?: number }).status = response.status;
+    throw error;
+  }
+
+  return response.json<T>();
+}
+
+export async function renewWatch(env: Env): Promise<{ historyId: string; expiration: string }> {
+  return gmailFetch(env, `/users/${encodeURIComponent(env.GMAIL_USER)}/watch`, {
+    method: "POST",
+    body: JSON.stringify({ topicName: env.GMAIL_PUBSUB_TOPIC }),
+  });
+}
+
+export async function getProfile(env: Env): Promise<{ historyId: string; emailAddress: string }> {
+  return gmailFetch(env, `/users/${encodeURIComponent(env.GMAIL_USER)}/profile`);
+}
+
+export async function listHistory(
+  env: Env,
+  startHistoryId: string,
+): Promise<{ messageIds: string[]; latestHistoryId: string }> {
+  const messageIds = new Set<string>();
+  let pageToken: string | undefined;
+  let latestHistoryId = startHistoryId;
+
+  do {
+    const params = new URLSearchParams({
+      startHistoryId,
+      historyTypes: "messageAdded",
+      maxResults: "500",
+    });
+    if (pageToken) params.set("pageToken", pageToken);
+
+    const page = await gmailFetch<GmailHistoryResponse>(
+      env,
+      `/users/${encodeURIComponent(env.GMAIL_USER)}/history?${params}`,
+    );
+
+    for (const record of page.history ?? []) {
+      if (BigInt(record.id) > BigInt(latestHistoryId)) latestHistoryId = record.id;
+      for (const added of record.messagesAdded ?? []) messageIds.add(added.message.id);
+    }
+
+    if (page.historyId && BigInt(page.historyId) > BigInt(latestHistoryId)) {
+      latestHistoryId = page.historyId;
+    }
+    pageToken = page.nextPageToken;
+  } while (pageToken);
+
+  return { messageIds: [...messageIds], latestHistoryId };
+}
+
+export async function getMessage(env: Env, messageId: string): Promise<GmailMessage> {
+  const params = new URLSearchParams({
+    format: "metadata",
+    metadataHeaders: "From",
+  });
+  params.append("metadataHeaders", "To");
+  params.append("metadataHeaders", "Cc");
+  params.append("metadataHeaders", "Bcc");
+  params.append("metadataHeaders", "Subject");
+  params.append("metadataHeaders", "Message-ID");
+
+  return gmailFetch(
+    env,
+    `/users/${encodeURIComponent(env.GMAIL_USER)}/messages/${encodeURIComponent(messageId)}?${params}`,
+  );
+}
+
+export function header(message: GmailMessage, name: string): string {
+  return message.payload?.headers?.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? "";
+}
+
+export function extractSingleRecipient(message: GmailMessage): string | null {
+  const raw = header(message, "To");
+  if (!raw || raw.includes(",")) return null;
+  const angle = raw.match(/<([^>]+)>/);
+  const candidate = (angle?.[1] ?? raw).trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate) ? candidate : null;
+}
+
+export function isSent(message: GmailMessage): boolean {
+  return message.labelIds?.includes("SENT") ?? false;
+}
