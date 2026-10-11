@@ -39,11 +39,14 @@ function decodeBase64UrlJson<T>(part: string): T {
   return JSON.parse(atob(padded)) as T;
 }
 
-function base64UrlToBytes(part: string): Uint8Array {
+function base64UrlToArrayBuffer(part: string): ArrayBuffer {
   const normalized = part.replace(/-/g, "+").replace(/_/g, "/");
   const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
   const binary = atob(padded);
-  return Uint8Array.from(binary, (c) => c.charCodeAt(0));
+  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
 }
 
 export async function verifyPubSubJwt(request: Request, env: Env): Promise<void> {
@@ -92,7 +95,7 @@ export async function verifyPubSubJwt(request: Request, env: Env): Promise<void>
   );
 
   const data = new TextEncoder().encode(`${headerPart}.${payloadPart}`);
-  const signature = base64UrlToBytes(signaturePart);
+  const signature = base64UrlToArrayBuffer(signaturePart);
   const valid = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, signature, data);
   if (!valid) throw new Error("Invalid Pub/Sub JWT signature");
 }
