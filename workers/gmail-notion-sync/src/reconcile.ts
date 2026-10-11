@@ -1,5 +1,5 @@
-import { verifyAndMaybeFinalizeApprovedSent } from "./approval";
-import { classifyOutboundEvent, greatestHistoryId } from "./policy";
+import { inspectApprovedSent, verifyAndMaybeFinalizeApprovedSent } from "./approval";
+import { classifyOutboundEvent, greatestHistoryId, isApplyMode } from "./policy";
 import type { Env, GmailMessage } from "./types";
 import {
   extractSingleRecipient,
@@ -18,19 +18,30 @@ import {
   reconcileCompanyAfterOutbound,
   verifyReconciliation,
 } from "./notion";
-import { claimMessage, completeMessage, failMessage, getState, setState } from "./state";
+import {
+  claimMessage,
+  completeMessage,
+  failMessage,
+  getState,
+  recordObservation,
+  setState,
+} from "./state";
 
 export interface ReconcileSummary {
   startHistoryId: string;
   latestHistoryId: string;
   discovered: number;
   processed: number;
+  observed: number;
   skipped: number;
   alreadyDone: number;
   failures: Array<{ messageId: string; error: string }>;
 }
 
-async function processOutboundMessage(env: Env, message: GmailMessage): Promise<"processed" | "skipped" | "already_done"> {
+async function processOutboundMessage(
+  env: Env,
+  message: GmailMessage,
+): Promise<"processed" | "observed" | "skipped" | "already_done"> {
   if (!isSent(message)) return "skipped";
   if (env.PROCESS_OUTBOUND !== "true") return "skipped";
 
@@ -48,7 +59,42 @@ async function processOutboundMessage(env: Env, message: GmailMessage): Promise<
     return "skipped";
   }
 
+  const thread = await getThread(env, message.threadId);
+  const priorOutbound = threadHasPriorSent(thread, message.id);
+  const predictedEventType = classifyOutboundEvent(priorOutbound);
   const existingEvent = await findOutreachEventByProviderMessageId(env, message.id);
+
+  if (!isApplyMode(env.WRITE_MODE)) {
+    const sentAt = message.internalDate
+      ? new Date(Number(message.internalDate)).toISOString()
+      : null;
+    const approval = await inspectApprovedSent(env, company, message, recipient);
+    const approvalSnapshotState = !approval.hasSnapshot
+      ? "none"
+      : approval.matched
+        ? "matched"
+        : "mismatch";
+
+    await recordObservation(env, {
+      providerMessageId: message.id,
+      providerThreadId: message.threadId,
+      recipient,
+      companyPageId: company.id,
+      predictedEventType,
+      providerSentAt: sentAt,
+      existingNotionEventId: existingEvent?.id ?? null,
+      approvalSnapshotState,
+      approvalId: approval.approvalId ?? null,
+      detail:
+        approval.mismatchReasons.length > 0
+          ? `Approved-draft mismatch: ${approval.mismatchReasons.join("; ")}`
+          : existingEvent
+            ? "Provider message already exists in Notion; observation only."
+            : "Predicted reconciliation only; no Notion write performed.",
+    });
+    return "observed";
+  }
+
   if (existingEvent) {
     const existingType =
       existingEvent.properties["Event Type"]?.select?.name === "Follow-Up" ? "Follow-Up" : "First Touch";
@@ -86,9 +132,7 @@ async function processOutboundMessage(env: Env, message: GmailMessage): Promise<
     }
   }
 
-  const thread = await getThread(env, message.threadId);
-  const priorOutbound = threadHasPriorSent(thread, message.id);
-  const eventType = classifyOutboundEvent(priorOutbound);
+  const eventType = predictedEventType;
 
   const claim = await claimMessage(env, {
     providerMessageId: message.id,
@@ -156,6 +200,7 @@ export async function reconcileFromHistory(env: Env, notificationHistoryId: stri
       latestHistoryId: startHistoryId,
       discovered: 0,
       processed: 0,
+      observed: 0,
       skipped: 0,
       alreadyDone: 0,
       failures: [],
@@ -188,6 +233,7 @@ export async function reconcileFromHistory(env: Env, notificationHistoryId: stri
     latestHistoryId: history.latestHistoryId,
     discovered: history.messageIds.length,
     processed: 0,
+    observed: 0,
     skipped: 0,
     alreadyDone: 0,
     failures: [],
@@ -198,6 +244,7 @@ export async function reconcileFromHistory(env: Env, notificationHistoryId: stri
       const gmailMessage = await getMessage(env, messageId);
       const result = await processOutboundMessage(env, gmailMessage);
       if (result === "processed") summary.processed++;
+      if (result === "observed") summary.observed++;
       if (result === "skipped") summary.skipped++;
       if (result === "already_done") summary.alreadyDone++;
     } catch (error) {
