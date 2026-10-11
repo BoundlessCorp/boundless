@@ -126,6 +126,10 @@ export async function verifyAndMaybeFinalizeApprovedSent(
     companyPageId: company.id,
     gmailDraftId: snapshot.gmailDraftId,
     draftMessageId: snapshot.draftMessageId,
+    qaPassedMessageId: snapshot.qaPassedMessageId,
+    founderApprovedDraftId: snapshot.founderApprovedDraftId,
+    founderApprovedMessageId: snapshot.founderApprovedMessageId,
+    founderApprovedAt: snapshot.founderApprovedAt,
   });
 
   await consumeApprovedDraft(env, snapshot.approvalId, metadataMessage.id);
