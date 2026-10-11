@@ -153,52 +153,95 @@ The endpoint refuses to run unless a history gap is already recorded. Reseeding 
 
 ## Required Cloudflare secrets
 
-Set these with Wrangler; never commit values:
+Both Worker configs declare these names under `secrets.required`, so deploy will fail clearly if any are missing.
 
-```bash
-wrangler secret put GMAIL_OAUTH_CLIENT_ID --config workers/gmail-notion-sync/wrangler.jsonc
-wrangler secret put GMAIL_OAUTH_CLIENT_SECRET --config workers/gmail-notion-sync/wrangler.jsonc
-wrangler secret put GMAIL_OAUTH_REFRESH_TOKEN --config workers/gmail-notion-sync/wrangler.jsonc
-wrangler secret put NOTION_TOKEN --config workers/gmail-notion-sync/wrangler.jsonc
-wrangler secret put ADMIN_TOKEN --config workers/gmail-notion-sync/wrangler.jsonc
-```
-
-## Google OAuth scope
-
-Use the narrowest scope that supports reading Gmail history/messages and creating/renewing a mailbox watch.
-
-The Worker has no Gmail send endpoint and should not be granted send authority.
-
-## Google Cloud setup
-
-1. Create a Pub/Sub topic, e.g. `boundless-gmail-events`.
-2. Grant `gmail-api-push@system.gserviceaccount.com` permission to publish to the topic.
-3. Create a push subscription to:
-   `https://<worker-host>/pubsub/gmail`
-4. Configure Pub/Sub push authentication using a dedicated service account.
-5. Set the Worker vars:
-   - `GMAIL_PUBSUB_TOPIC`
-   - `PUBSUB_AUDIENCE`
-   - `PUBSUB_SERVICE_ACCOUNT_EMAIL`
-6. Ensure the Pub/Sub push audience exactly matches `PUBSUB_AUDIENCE`.
-
-## D1 setup
-
-Create a dedicated database:
-
-```bash
-wrangler d1 create boundless-gmail-notion-sync
-```
-
-Copy the resulting database ID into `workers/gmail-notion-sync/wrangler.jsonc`.
-
-Initialize schema:
+For staging, set values against the staging config only; never commit secret values:
 
 ```bash
 cd workers/gmail-notion-sync
-npm install
-npm run d1:init:remote
+
+npx wrangler secret put GMAIL_OAUTH_CLIENT_ID --config wrangler.staging.jsonc
+npx wrangler secret put GMAIL_OAUTH_CLIENT_SECRET --config wrangler.staging.jsonc
+npx wrangler secret put GMAIL_OAUTH_REFRESH_TOKEN --config wrangler.staging.jsonc
+npx wrangler secret put NOTION_TOKEN --config wrangler.staging.jsonc
+npx wrangler secret put ADMIN_TOKEN --config wrangler.staging.jsonc
 ```
+
+Production secret/config work is intentionally out of scope until staging acceptance and founder cutover approval.
+
+## Google OAuth scope
+
+Use:
+
+```
+https://www.googleapis.com/auth/gmail.readonly
+```
+
+That scope is sufficient for this Worker's read-only Gmail usage: mailbox profile, drafts/messages/threads/history and mailbox watch. The Worker has no Gmail send endpoint and must not receive `gmail.send`, `gmail.compose`, `gmail.modify`, or full-mailbox send/delete authority.
+
+## Google Cloud staging setup
+
+The included bootstrap script defaults to staging-only resource names:
+
+- topic: `boundless-gmail-events-staging`
+- push subscription: `boundless-gmail-push-staging`
+- push service account: `boundless-gmail-push-staging`
+
+After the staging Worker URL exists:
+
+```bash
+export GCP_PROJECT_ID="<your-gcp-project>"
+export WORKER_BASE_URL="https://boundless-gmail-notion-sync-staging.<your-subdomain>.workers.dev"
+bash scripts/bootstrap-gcp.sh
+```
+
+The script:
+1. enables Gmail, Pub/Sub and IAM Credentials APIs;
+2. creates the staging topic if needed;
+3. grants `gmail-api-push@system.gserviceaccount.com` publisher permission;
+4. creates the dedicated push service account if needed;
+5. configures authenticated Pub/Sub push to `/pubsub/gmail`;
+6. prints the exact Worker vars to copy into `wrangler.staging.jsonc`.
+
+The Pub/Sub push audience must exactly match the Worker's configured `PUBSUB_AUDIENCE`.
+
+## D1 staging setup
+
+Create a dedicated staging database in Western North America:
+
+```bash
+cd workers/gmail-notion-sync
+npm ci
+npx wrangler d1 create boundless-gmail-notion-sync-staging --location wnam
+```
+
+Copy the returned D1 database UUID into `wrangler.staging.jsonc` as `database_id`.
+
+Initialize only the staging schema:
+
+```bash
+npm run d1:init:staging
+```
+
+The generic `d1:init:remote` command intentionally exits with an error to prevent accidental non-staging initialization.
+
+## Staging deployment order
+
+1. `npm ci`
+2. create the staging D1 database and place its UUID in `wrangler.staging.jsonc`;
+3. replace all remaining `REPLACE_WITH_*` staging placeholders;
+4. configure the five required staging secrets;
+5. run `npm run d1:init:staging`;
+6. run `npm run preflight:staging`;
+7. deploy with `npm run deploy:staging`;
+8. configure Google Cloud Pub/Sub using `scripts/bootstrap-gcp.sh`;
+9. initialize Gmail watch through `POST /admin/watch`;
+10. execute acceptance tests T01–T18;
+11. execute approved-draft tests T19–T23 with release finalization still disabled until required;
+12. execute T24 parallel observation with Outbound Sync — Lite;
+13. only then consider a production cutover decision.
+
+`npm run deploy` intentionally fails on V0.1. There is no generic production deployment command.
 
 ## Notion integration requirements
 
