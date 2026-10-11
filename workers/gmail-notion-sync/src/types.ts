@@ -12,6 +12,7 @@ export interface Env {
 
   PROCESS_OUTBOUND: string;
   PROCESS_INBOUND: string;
+  FINALIZE_RELEASE_STATE: string;
 
   GMAIL_OAUTH_CLIENT_ID: string;
   GMAIL_OAUTH_CLIENT_SECRET: string;
@@ -34,14 +35,31 @@ export interface GmailNotification {
   historyId: string;
 }
 
+export interface GmailMessagePart {
+  partId?: string;
+  mimeType?: string;
+  filename?: string;
+  headers?: Array<{ name: string; value: string }>;
+  body?: {
+    attachmentId?: string;
+    size?: number;
+    data?: string;
+  };
+  parts?: GmailMessagePart[];
+}
+
 export interface GmailMessage {
   id: string;
   threadId: string;
   labelIds?: string[];
   internalDate?: string;
-  payload?: {
-    headers?: Array<{ name: string; value: string }>;
-  };
+  snippet?: string;
+  payload?: GmailMessagePart;
+}
+
+export interface GmailDraft {
+  id: string;
+  message: GmailMessage;
 }
 
 export interface GmailHistoryResponse {
