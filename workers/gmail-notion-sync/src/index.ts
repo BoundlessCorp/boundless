@@ -1,3 +1,4 @@
+import { captureApprovedDraft } from "./approval";
 import type { Env, GmailNotification, PubSubPushBody } from "./types";
 import { assertAdmin, verifyPubSubJwt } from "./auth";
 import { getProfile, renewWatch } from "./gmail";
@@ -87,6 +88,7 @@ export default {
         mode: {
           outbound: env.PROCESS_OUTBOUND === "true",
           inbound: env.PROCESS_INBOUND === "true",
+          releaseFinalization: env.FINALIZE_RELEASE_STATE === "true",
         },
         ...(await healthSnapshot(env)),
       });
@@ -102,6 +104,58 @@ export default {
         return json({ ok: true, ...(await initializeOrRenewWatch(env)) });
       } catch (error) {
         return json({ ok: false, error: error instanceof Error ? error.message : String(error) }, 401);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/admin/approval/snapshot") {
+      try {
+        assertAdmin(request, env);
+        const body = await request.json<{
+          companyPageId?: string;
+          draftId?: string;
+          expectedDraftMessageId?: string;
+        }>();
+
+        if (!body.companyPageId || !body.draftId || !body.expectedDraftMessageId) {
+          return json(
+            {
+              ok: false,
+              error: "companyPageId, draftId and expectedDraftMessageId are required",
+            },
+            400,
+          );
+        }
+
+        const snapshot = await captureApprovedDraft(env, {
+          companyPageId: body.companyPageId,
+          draftId: body.draftId,
+          expectedDraftMessageId: body.expectedDraftMessageId,
+        });
+
+        return json({
+          ok: true,
+          approval: {
+            approvalId: snapshot.approvalId,
+            companyPageId: snapshot.companyPageId,
+            gmailDraftId: snapshot.gmailDraftId,
+            draftMessageId: snapshot.draftMessageId,
+            providerThreadId: snapshot.providerThreadId,
+            recipient: snapshot.recipient,
+            subject: snapshot.subject,
+            qaPassedMessageId: snapshot.qaPassedMessageId,
+            founderApprovedDraftId: snapshot.founderApprovedDraftId,
+            founderApprovedMessageId: snapshot.founderApprovedMessageId,
+            founderApprovedAt: snapshot.founderApprovedAt,
+            state: snapshot.state,
+            capturedAt: snapshot.capturedAt,
+          },
+          releaseFinalizationEnabled: env.FINALIZE_RELEASE_STATE === "true",
+        });
+      } catch (error) {
+        return json(
+          { ok: false, error: error instanceof Error ? error.message : String(error) },
+          400,
+        );
       }
     }
 
