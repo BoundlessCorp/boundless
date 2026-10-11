@@ -42,3 +42,11 @@ jobs:
 
       - name: Unit tests
         run: npm test
+
+      - name: Upload generated lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: gmail-notion-sync-package-lock
+          path: workers/gmail-notion-sync/package-lock.json
+          if-no-files-found: error
+          retention-days: 3
