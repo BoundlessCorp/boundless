@@ -1,3 +1,4 @@
+import { nextProspectStatus, shouldAdvanceTimestamp } from "./policy";
 import type { Env, GmailMessage, NotionPage, NotionQueryResponse } from "./types";
 import { extractSingleRecipient, header } from "./gmail";
 
@@ -192,11 +193,12 @@ export async function reconcileCompanyAfterOutbound(
 
   const properties: Record<string, unknown> = {};
 
-  if (!currentStatus || !NON_DOWNGRADABLE_PROSPECT_STATUSES.has(currentStatus)) {
-    properties["Prospect Status"] = select(eventType === "First Touch" ? "Contacted" : "Follow-Up");
+  const nextStatus = nextProspectStatus(currentStatus, eventType);
+  if (nextStatus) {
+    properties["Prospect Status"] = select(nextStatus);
   }
 
-  if (!currentLastContact || new Date(currentLastContact).getTime() < new Date(sentAt).getTime()) {
+  if (shouldAdvanceTimestamp(currentLastContact, sentAt)) {
     properties["Last Contact"] = date(sentAt);
   }
 
