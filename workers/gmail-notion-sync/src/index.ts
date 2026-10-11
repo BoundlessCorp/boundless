@@ -1,8 +1,8 @@
 import type { Env, GmailNotification, PubSubPushBody } from "./types";
 import { assertAdmin, verifyPubSubJwt } from "./auth";
-import { renewWatch } from "./gmail";
+import { getProfile, renewWatch } from "./gmail";
 import { reconcileFromHistory } from "./reconcile";
-import { getState, healthSnapshot, logDelivery, setState } from "./state";
+import { clearState, getState, healthSnapshot, logDelivery, setState } from "./state";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body, null, 2), {
@@ -102,6 +102,47 @@ export default {
         return json({ ok: true, ...(await initializeOrRenewWatch(env)) });
       } catch (error) {
         return json({ ok: false, error: error instanceof Error ? error.message : String(error) }, 401);
+      }
+    }
+
+    if (request.method === "POST" && url.pathname === "/admin/history/reseed") {
+      try {
+        assertAdmin(request, env);
+        const gap = await getState(env, "gmail_history_gap");
+        if (!gap) return json({ ok: false, error: "No Gmail history gap is currently recorded" }, 409);
+
+        const body = await request.json<{ acknowledgeHistoryGap?: boolean; note?: string }>();
+        const note = body.note?.trim() ?? "";
+        if (body.acknowledgeHistoryGap !== true || note.length < 12) {
+          return json(
+            {
+              ok: false,
+              error:
+                "Explicit acknowledgeHistoryGap=true and an audit note of at least 12 characters are required",
+            },
+            400,
+          );
+        }
+
+        const profile = await getProfile(env);
+        await setState(env, "gmail_history_id", profile.historyId);
+        await clearState(env, "gmail_history_gap");
+        await logDelivery(
+          env,
+          null,
+          profile.historyId,
+          "history_gap_reseeded",
+          JSON.stringify({ note, priorGap: JSON.parse(gap) }),
+        );
+
+        return json({
+          ok: true,
+          reseededHistoryId: profile.historyId,
+          warning:
+            "Reseed acknowledges that the unavailable Gmail history range was reviewed outside this endpoint. It does not reconstruct the missing range.",
+        });
+      } catch (error) {
+        return json({ ok: false, error: error instanceof Error ? error.message : String(error) }, 500);
       }
     }
 
