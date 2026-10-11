@@ -4,9 +4,9 @@ set -euo pipefail
 : "${GCP_PROJECT_ID:?Set GCP_PROJECT_ID}"
 : "${WORKER_BASE_URL:?Set WORKER_BASE_URL, e.g. https://boundless-gmail-notion-sync.<subdomain>.workers.dev}"
 
-TOPIC="${PUBSUB_TOPIC:-boundless-gmail-events}"
-SUBSCRIPTION="${PUBSUB_SUBSCRIPTION:-boundless-gmail-push}"
-PUSH_SA_NAME="${PUBSUB_PUSH_SA_NAME:-boundless-gmail-push}"
+TOPIC="${PUBSUB_TOPIC:-boundless-gmail-events-staging}"
+SUBSCRIPTION="${PUBSUB_SUBSCRIPTION:-boundless-gmail-push-staging}"
+PUSH_SA_NAME="${PUBSUB_PUSH_SA_NAME:-boundless-gmail-push-staging}"
 PUSH_ENDPOINT="${WORKER_BASE_URL%/}/pubsub/gmail"
 AUDIENCE="${PUBSUB_AUDIENCE:-$PUSH_ENDPOINT}"
 
