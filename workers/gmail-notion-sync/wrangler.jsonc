@@ -1,0 +1,31 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "boundless-gmail-notion-sync",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "triggers": {
+    "crons": ["17 15 * * *"]
+  },
+  "d1_databases": [
+    {
+      "binding": "SYNC_DB",
+      "database_name": "boundless-gmail-notion-sync",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ],
+  "vars": {
+    "GMAIL_USER": "jason@boundlesscorp.ca",
+    "GMAIL_PUBSUB_TOPIC": "projects/REPLACE_WITH_GCP_PROJECT/topics/boundless-gmail-events",
+    "PUBSUB_AUDIENCE": "https://REPLACE_WITH_WORKER_HOST/pubsub/gmail",
+    "PUBSUB_SERVICE_ACCOUNT_EMAIL": "REPLACE_WITH_PUSH_SERVICE_ACCOUNT",
+    "NOTION_VERSION": "2025-09-03",
+    "NOTION_COMPANIES_DATA_SOURCE_ID": "5e25023c-6c34-41ee-94cd-319d0b957c60",
+    "NOTION_OUTREACH_EVENTS_DATA_SOURCE_ID": "a872e9d9-2cef-4465-b636-b04ed0026368",
+    "PROCESS_OUTBOUND": "true",
+    "PROCESS_INBOUND": "false"
+  }
+}
