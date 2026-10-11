@@ -81,11 +81,51 @@ export async function findCompanyByPrimaryEmail(env: Env, email: string): Promis
 
   if (response.results.length > 1) {
     throw new Error(
-      `Company resolution is ambiguous for ${email}: found ${response.results.length} matches`,
+      `Company resolution is ambiguous for ${email}: found ${response.results.length} exact matches`,
     );
   }
 
-  return response.results[0] ?? null;
+  if (response.results.length === 1) return response.results[0];
+
+  // Email addresses are operationally case-insensitive, but external stores may
+  // preserve original casing. Fall back to a bounded paginated scan rather than
+  // letting capitalization create a false "unknown prospect" result.
+  const normalized = email.trim().toLowerCase();
+  const matches: NotionPage[] = [];
+  let cursor: string | null | undefined;
+
+  do {
+    const page = await notionFetch<NotionQueryResponse>(
+      env,
+      `/data_sources/${env.NOTION_COMPANIES_DATA_SOURCE_ID}/query`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          filter: {
+            property: "Primary Contact Email",
+            email: { is_not_empty: true },
+          },
+          page_size: 100,
+          ...(cursor ? { start_cursor: cursor } : {}),
+        }),
+      },
+    );
+
+    for (const company of page.results) {
+      if (propertyText(company, "Primary Contact Email").trim().toLowerCase() === normalized) {
+        matches.push(company);
+        if (matches.length > 1) {
+          throw new Error(
+            `Company resolution is ambiguous for ${email}: multiple case-insensitive matches`,
+          );
+        }
+      }
+    }
+
+    cursor = page.has_more ? page.next_cursor : null;
+  } while (cursor);
+
+  return matches[0] ?? null;
 }
 
 export async function findOutreachEventByProviderMessageId(
