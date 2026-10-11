@@ -33,3 +33,15 @@ export function greatestHistoryId(...ids: string[]): string {
   if (ids.length === 0) throw new Error("At least one history ID is required");
   return ids.reduce((greatest, id) => (BigInt(id) > BigInt(greatest) ? id : greatest));
 }
+
+
+export function isApplyMode(writeMode: string | null | undefined): boolean {
+  return writeMode === "apply";
+}
+
+export function canFinalizeRelease(
+  writeMode: string | null | undefined,
+  finalizeFlag: string | null | undefined,
+): boolean {
+  return isApplyMode(writeMode) && finalizeFlag === "true";
+}
