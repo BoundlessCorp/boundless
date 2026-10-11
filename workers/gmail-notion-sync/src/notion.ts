@@ -345,10 +345,30 @@ export async function finalizeCompanyReleaseAfterExactSent(
     companyPageId: string;
     gmailDraftId: string;
     draftMessageId: string;
+    qaPassedMessageId: string;
+    founderApprovedDraftId: string;
+    founderApprovedMessageId: string;
+    founderApprovedAt: string | null;
   },
 ): Promise<void> {
   const company = await fetchPage(env, input.companyPageId);
   const before = companyAuditSnapshot(company);
+
+  const auditMatches =
+    before.qaPassedMessageId === input.qaPassedMessageId &&
+    before.founderApprovedDraftId === input.founderApprovedDraftId &&
+    before.founderApprovedMessageId === input.founderApprovedMessageId &&
+    before.founderApprovedAt === input.founderApprovedAt;
+
+  if (!auditMatches) {
+    throw new Error("Release-state safety invariant failed: approval audit fields no longer match snapshot");
+  }
+
+  // Idempotent recovery: Notion may have committed the release transition even
+  // if D1 consumption failed immediately afterward.
+  if (before.draftReleaseStatus === "SENT" && before.canonicalDraftId === "") {
+    return;
+  }
 
   assertCompanyApprovalForDraft(company, {
     draftId: input.gmailDraftId,
@@ -372,10 +392,10 @@ export async function finalizeCompanyReleaseAfterExactSent(
   }
 
   if (
-    before.qaPassedMessageId !== after.qaPassedMessageId ||
-    before.founderApprovedDraftId !== after.founderApprovedDraftId ||
-    before.founderApprovedMessageId !== after.founderApprovedMessageId ||
-    before.founderApprovedAt !== after.founderApprovedAt
+    input.qaPassedMessageId !== after.qaPassedMessageId ||
+    input.founderApprovedDraftId !== after.founderApprovedDraftId ||
+    input.founderApprovedMessageId !== after.founderApprovedMessageId ||
+    input.founderApprovedAt !== after.founderApprovedAt
   ) {
     throw new Error("Release-state safety invariant failed: approval audit fields changed");
   }
