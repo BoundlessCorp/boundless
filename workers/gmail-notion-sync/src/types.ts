@@ -89,3 +89,22 @@ export interface GmailThread {
   historyId?: string;
   messages?: GmailMessage[];
 }
+
+
+export interface ApprovedDraftSnapshot {
+  approvalId: string;
+  companyPageId: string;
+  gmailDraftId: string;
+  draftMessageId: string;
+  providerThreadId: string;
+  recipient: string;
+  subject: string;
+  contentFingerprint: string;
+  qaPassedMessageId: string;
+  founderApprovedDraftId: string;
+  founderApprovedMessageId: string;
+  founderApprovedAt: string | null;
+  state: "approved" | "consumed" | "invalidated";
+  sentMessageId?: string | null;
+  capturedAt: string;
+}
