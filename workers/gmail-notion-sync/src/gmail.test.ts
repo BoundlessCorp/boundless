@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { extractSingleRecipient, GmailApiError, header, isExpiredHistoryError, isSent } from "./gmail";
+import {
+  extractSingleRecipient,
+  GmailApiError,
+  header,
+  isExpiredHistoryError,
+  isSent,
+  threadHasPriorSent,
+} from "./gmail";
 import type { GmailMessage } from "./types";
 
 function message(headers: Array<{ name: string; value: string }>, labelIds: string[] = []): GmailMessage {
@@ -52,5 +59,38 @@ describe("Gmail history errors", () => {
     expect(isExpiredHistoryError(new GmailApiError(404, "stale history"))).toBe(true);
     expect(isExpiredHistoryError(new GmailApiError(401, "auth"))).toBe(false);
     expect(isExpiredHistoryError(new Error("404 text is not enough"))).toBe(false);
+  });
+});
+
+
+describe("Gmail thread truth", () => {
+  it("detects an earlier provider-confirmed SENT in the same thread", () => {
+    expect(
+      threadHasPriorSent(
+        {
+          id: "t1",
+          messages: [
+            { id: "old", threadId: "t1", labelIds: ["SENT"] },
+            { id: "current", threadId: "t1", labelIds: ["SENT"] },
+          ],
+        },
+        "current",
+      ),
+    ).toBe(true);
+  });
+
+  it("does not count the current message itself or inbound-only history", () => {
+    expect(
+      threadHasPriorSent(
+        {
+          id: "t1",
+          messages: [
+            { id: "incoming", threadId: "t1", labelIds: ["INBOX"] },
+            { id: "current", threadId: "t1", labelIds: ["SENT"] },
+          ],
+        },
+        "current",
+      ),
+    ).toBe(false);
   });
 });
