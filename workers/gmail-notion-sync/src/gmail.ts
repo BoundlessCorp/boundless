@@ -1,5 +1,5 @@
 import { getGoogleAccessToken } from "./auth";
-import type { Env, GmailHistoryResponse, GmailMessage, GmailThread } from "./types";
+import type { Env, GmailDraft, GmailHistoryResponse, GmailMessage, GmailThread } from "./types";
 
 const GMAIL_API = "https://gmail.googleapis.com/gmail/v1";
 
@@ -131,5 +131,20 @@ export async function getThread(env: Env, threadId: string): Promise<GmailThread
 export function threadHasPriorSent(thread: GmailThread, currentMessageId: string): boolean {
   return (thread.messages ?? []).some(
     (message) => message.id !== currentMessageId && (message.labelIds?.includes("SENT") ?? false),
+  );
+}
+
+
+export async function getDraft(env: Env, draftId: string): Promise<GmailDraft> {
+  return gmailFetch(
+    env,
+    `/users/${encodeURIComponent(env.GMAIL_USER)}/drafts/${encodeURIComponent(draftId)}?format=full`,
+  );
+}
+
+export async function getFullMessage(env: Env, messageId: string): Promise<GmailMessage> {
+  return gmailFetch(
+    env,
+    `/users/${encodeURIComponent(env.GMAIL_USER)}/messages/${encodeURIComponent(messageId)}?format=full`,
   );
 }
