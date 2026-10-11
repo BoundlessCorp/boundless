@@ -1,6 +1,6 @@
 import { classifyOutboundEvent, greatestHistoryId } from "./policy";
 import type { Env, GmailMessage } from "./types";
-import { extractSingleRecipient, getMessage, isSent, listHistory } from "./gmail";
+import { extractSingleRecipient, getMessage, isExpiredHistoryError, isSent, listHistory } from "./gmail";
 import {
   companyAuditSnapshot,
   createOutboundEvent,
@@ -144,7 +144,27 @@ export async function reconcileFromHistory(env: Env, notificationHistoryId: stri
     };
   }
 
-  const history = await listHistory(env, startHistoryId);
+  let history;
+  try {
+    history = await listHistory(env, startHistoryId);
+  } catch (error) {
+    if (isExpiredHistoryError(error)) {
+      await setState(
+        env,
+        "gmail_history_gap",
+        JSON.stringify({
+          detectedAt: new Date().toISOString(),
+          staleStartHistoryId: startHistoryId,
+          notificationHistoryId,
+          reason: "Gmail returned 404 for startHistoryId; manual full-sync/reseed review required.",
+        }),
+      );
+      throw new Error(
+        "GMAIL_HISTORY_GAP: Gmail rejected the persisted startHistoryId. Processing is paused until the gap is explicitly reviewed and reseeded.",
+      );
+    }
+    throw error;
+  }
   const summary: ReconcileSummary = {
     startHistoryId,
     latestHistoryId: history.latestHistoryId,
