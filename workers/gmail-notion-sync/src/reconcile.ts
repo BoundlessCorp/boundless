@@ -1,3 +1,4 @@
+import { classifyOutboundEvent, greatestHistoryId } from "./policy";
 import type { Env, GmailMessage } from "./types";
 import { extractSingleRecipient, getMessage, isSent, listHistory } from "./gmail";
 import {
@@ -74,7 +75,7 @@ async function processOutboundMessage(env: Env, message: GmailMessage): Promise<
   }
 
   const priorOutbound = await hasPriorOutboundInThread(env, message.threadId);
-  const eventType = priorOutbound ? "Follow-Up" : "First Touch";
+  const eventType = classifyOutboundEvent(priorOutbound);
 
   const claim = await claimMessage(env, {
     providerMessageId: message.id,
@@ -175,10 +176,7 @@ export async function reconcileFromHistory(env: Env, notificationHistoryId: stri
     throw new Error(`Reconciliation failed for ${summary.failures.length} message(s): ${JSON.stringify(summary.failures)}`);
   }
 
-  const advanceTo =
-    BigInt(notificationHistoryId) > BigInt(history.latestHistoryId)
-      ? notificationHistoryId
-      : history.latestHistoryId;
+  const advanceTo = greatestHistoryId(notificationHistoryId, history.latestHistoryId);
   await setState(env, "gmail_history_id", advanceTo);
   summary.latestHistoryId = advanceTo;
   return summary;
