@@ -13,7 +13,7 @@ on:
       - ".github/workflows/gmail-notion-sync-ci.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
@@ -43,10 +43,16 @@ jobs:
       - name: Unit tests
         run: npm test
 
-      - name: Upload generated lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: gmail-notion-sync-package-lock
-          path: workers/gmail-notion-sync/package-lock.json
-          if-no-files-found: error
-          retention-days: 3
+      - name: Commit generated lockfile once
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/gmail-notion-sync-v0-1'
+        working-directory: .
+        run: |
+          if git ls-files --error-unmatch workers/gmail-notion-sync/package-lock.json >/dev/null 2>&1; then
+            echo "package-lock.json is already tracked; no bootstrap commit needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add workers/gmail-notion-sync/package-lock.json
+          git commit -m "Lock Gmail-Notion sync worker dependencies"
+          git push origin HEAD:feature/gmail-notion-sync-v0-1
