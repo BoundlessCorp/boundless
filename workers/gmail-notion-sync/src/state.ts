@@ -112,6 +112,9 @@ export async function healthSnapshot(env: Env): Promise<Record<string, unknown>>
   const processing = await env.SYNC_DB.prepare(
     "SELECT COUNT(*) AS count FROM processed_messages WHERE status='processing'",
   ).first<{ count: number }>();
+  const observations = await env.SYNC_DB.prepare(
+    "SELECT COUNT(*) AS count FROM sync_observations",
+  ).first<{ count: number }>();
 
   return {
     gmailHistoryId: historyId,
@@ -119,6 +122,7 @@ export async function healthSnapshot(env: Env): Promise<Record<string, unknown>>
     gmailHistoryGap: historyGap ? JSON.parse(historyGap) : null,
     failedMessages: failed?.count ?? 0,
     processingMessages: processing?.count ?? 0,
+    observedMessages: observations?.count ?? 0,
   };
 }
 
@@ -253,4 +257,56 @@ export async function consumeApprovedDraft(
   if ((result.meta.changes ?? 0) !== 1) {
     throw new Error("Approved-draft consumption failed or snapshot was already inactive");
   }
+}
+
+
+export async function recordObservation(
+  env: Env,
+  input: {
+    providerMessageId: string;
+    providerThreadId: string;
+    recipient: string;
+    companyPageId: string;
+    predictedEventType: string;
+    providerSentAt?: string | null;
+    existingNotionEventId?: string | null;
+    approvalSnapshotState: string;
+    approvalId?: string | null;
+    detail?: string | null;
+  },
+): Promise<void> {
+  const now = new Date().toISOString();
+  await env.SYNC_DB.prepare(
+    `INSERT INTO sync_observations(
+      provider_message_id, provider_thread_id, recipient, company_page_id,
+      predicted_event_type, provider_sent_at, existing_notion_event_id,
+      approval_snapshot_state, approval_id, detail,
+      observation_count, first_observed_at, last_observed_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+    ON CONFLICT(provider_message_id) DO UPDATE SET
+      provider_thread_id=excluded.provider_thread_id,
+      recipient=excluded.recipient,
+      company_page_id=excluded.company_page_id,
+      predicted_event_type=excluded.predicted_event_type,
+      provider_sent_at=excluded.provider_sent_at,
+      existing_notion_event_id=excluded.existing_notion_event_id,
+      approval_snapshot_state=excluded.approval_snapshot_state,
+      approval_id=excluded.approval_id,
+      detail=excluded.detail,
+      observation_count=sync_observations.observation_count+1,
+      last_observed_at=excluded.last_observed_at`,
+  ).bind(
+    input.providerMessageId,
+    input.providerThreadId,
+    input.recipient,
+    input.companyPageId,
+    input.predictedEventType,
+    input.providerSentAt ?? null,
+    input.existingNotionEventId ?? null,
+    input.approvalSnapshotState,
+    input.approvalId ?? null,
+    input.detail ?? null,
+    now,
+    now,
+  ).run();
 }
