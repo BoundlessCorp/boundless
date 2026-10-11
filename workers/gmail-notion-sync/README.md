@@ -10,6 +10,8 @@ V0.1 is deliberately conservative:
 
 - **Never sends Gmail.**
 - Processes **outbound SENT** events only by default.
+- `WRITE_MODE=observe` is the default: real Gmail/Notion evidence is read and predictions are stored in D1, but Notion is not mutated.
+- `WRITE_MODE=apply` is required before any Notion write path can execute.
 - Inbound reply/bounce/DNC remains disabled until separately tested.
 - Gmail Provider Message ID is the idempotency key.
 - A message must resolve to **exactly one** Company by Primary Contact Email.
@@ -41,8 +43,10 @@ Resolve exactly one Company by Primary Contact Email
   ↓
 Check Provider Message ID uniqueness in Notion
   ↓
-D1 claim / lease
-  ↓
+WRITE_MODE=observe?
+  ├─ yes → predict event/company/approval outcome → D1 observation only
+  └─ no/apply → D1 claim / lease
+                   ↓
 Create exactly one Outreach Event
   ↓
 Update safe Company fields (Prospect Status / Last Contact)
@@ -71,6 +75,7 @@ D1 stores durable sync state independent of Notion:
 - Pub/Sub delivery audit log.
 - Immutable approved-draft snapshots and their consumed/invalidated lifecycle.
 - Explicit Gmail history-gap state requiring manual review before reseed.
+- Shadow-mode predictions, existing-event observations, and approval-match state.
 
 This prevents a chat run, browser session, or Notion view from becoming the sole memory of reconciliation state.
 
@@ -78,7 +83,7 @@ This prevents a chat run, browser session, or Notion view from becoming the sole
 
 ### `GET /health`
 
-Returns current cursor, watch expiry, failed-message count, processing-message count, and enabled directions.
+Returns current cursor, watch expiry, failed-message count, processing-message count, observed-message count, enabled directions, `WRITE_MODE`, effective Notion-write state, and effective release-finalization state.
 
 This route does not expose secrets.
 
@@ -290,6 +295,8 @@ The release transition is idempotent: if Notion committed SENT/clear but D1 cons
 
 Do not deploy as a production replacement merely because the code deploys.
 
+Staging starts in `WRITE_MODE=observe`. Shadow observation must prove classification and identity resolution before `apply` is considered.
+
 ### Gate 1 — Local / staging
 - Typecheck passes.
 - D1 schema applies.
@@ -322,8 +329,8 @@ Replay the same Pub/Sub history range:
 - D1 shows the message as succeeded.
 
 ### Gate 5 — Controlled parallel run
-Run V0.1 in observation/controlled mode alongside Outbound Sync — Lite.
-Compare provider-backed outputs before changing production ownership.
+Run V0.1 with `WRITE_MODE=observe` alongside Outbound Sync — Lite.
+Compare D1 shadow predictions against provider-backed Lite/Notion outcomes. V0.1 must perform zero Notion mutations in this gate.
 
 ### Gate 6 — Production cutover
 Only after Jason approves:
