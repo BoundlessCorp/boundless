@@ -16,8 +16,9 @@ V0.1 is deliberately conservative:
 - A provider message may create **exactly one** Outreach Event.
 - Existing advanced/terminal prospect states are not downgraded.
 - QA Passed Message ID and Founder Approved IDs are asserted unchanged.
-- V0.1 does **not** clear Canonical Draft ID or set Draft Release Status=SENT because exact draft→SENT lineage is not yet proven by an immutable pre-send snapshot.
-- Ambiguous identity, multi-recipient SENT mail, Notion duplicates, auth errors, or read-back failures fail closed.
+- Immutable approved-draft snapshots are implemented, but release-state finalization remains disabled by default with `FINALIZE_RELEASE_STATE=false` until staging acceptance tests pass.
+- Unknown recipients and multi-recipient messages are safely ignored because the Gmail account can contain ordinary non-prospect mail.
+- Ambiguous Company identity, approved-draft mismatches, Notion duplicates, auth errors, history gaps, or read-back failures fail closed.
 - A failed message prevents the Gmail history cursor from advancing; retries are safe because already-completed Provider Message IDs are idempotent.
 - This Worker must remain isolated until controlled acceptance testing passes.
 
@@ -48,6 +49,11 @@ Update safe Company fields (Prospect Status / Last Contact)
   ↓
 Independent Notion read-back + duplicate check
   ↓
+If an approved-draft snapshot exists:
+verify thread + recipient + subject + content fingerprint
+  ↓
+Optionally finalize release state only when FINALIZE_RELEASE_STATE=true
+  ↓
 Mark D1 message succeeded
   ↓
 Advance Gmail history cursor
@@ -63,6 +69,8 @@ D1 stores durable sync state independent of Notion:
 - Retry / lease state.
 - Company/Event IDs written for each message.
 - Pub/Sub delivery audit log.
+- Immutable approved-draft snapshots and their consumed/invalidated lifecycle.
+- Explicit Gmail history-gap state requiring manual review before reseed.
 
 This prevents a chat run, browser session, or Notion view from becoming the sole memory of reconciliation state.
 
@@ -100,6 +108,48 @@ Initial setup persists the watch response history ID as the starting cursor.
 Renewal preserves the existing cursor so unprocessed history cannot be skipped.
 
 A daily Cloudflare cron also renews the watch. Gmail requires renewal at least every seven days.
+
+### `POST /admin/approval/snapshot`
+
+Admin-only immutable approval capture. Required body:
+
+```json
+{
+  "companyPageId": "<Notion Company page ID>",
+  "draftId": "<Gmail draft ID>",
+  "expectedDraftMessageId": "<exact Gmail draft message ID>"
+}
+```
+
+The snapshot is refused unless all of the following are true at capture time:
+
+- Gmail still has that exact draft and exact underlying draft-message ID.
+- The Gmail object is still a DRAFT.
+- Exactly one To recipient exists and Cc/Bcc are empty.
+- Recipient matches the Company Primary Contact Email.
+- Outreach QA Status = PASS.
+- Draft Release Status = APPROVED.
+- Canonical Draft ID matches the Gmail draft ID.
+- QA Passed Message ID matches the exact current draft-message ID.
+- Founder Approved Draft ID and Founder Approved Message ID match the same exact version.
+- Founder Approved At exists.
+
+The immutable ledger stores Company, Gmail draft ID, draft-message ID, thread, recipient, subject, content fingerprint, QA/founder audit IDs, and capture time.
+
+### `POST /admin/history/reseed`
+
+Admin-only recovery after Gmail rejects an expired/out-of-date history cursor.
+
+Requires:
+
+```json
+{
+  "acknowledgeHistoryGap": true,
+  "note": "Human audit / recovery note explaining the gap handling"
+}
+```
+
+The endpoint refuses to run unless a history gap is already recorded. Reseeding does **not** reconstruct missing Gmail history; it only resumes from the current provider cursor after explicit review.
 
 ## Required Cloudflare secrets
 
@@ -177,17 +227,21 @@ V0.1 writes only:
 - Notes
 
 ### Companies
+Always:
 - Prospect Status, subject to non-downgrade rules
 - Last Contact, only when the provider timestamp is newer
 
-It intentionally preserves:
+Only after an exact approved-draft snapshot matches the provider SENT **and** `FINALIZE_RELEASE_STATE=true`:
+- Draft Release Status → SENT
+- Canonical Draft ID → cleared
 
-- Draft Release Status
-- Canonical Draft ID
+Always preserved:
 - QA Passed Message ID / timestamp
 - Founder Approved Draft ID / Message ID / timestamp
 - suppression / DNC state
 - advanced/terminal Prospect Status
+
+The release transition is idempotent: if Notion committed SENT/clear but D1 consumption failed, a retry recognizes the already-finalized state and completes the ledger consumption safely.
 
 ## Acceptance gates before production
 
@@ -235,30 +289,27 @@ Only after Jason approves:
 - update Gmail ↔ Notion heartbeat definition;
 - document rollback.
 
-## Known deliberate V0.1 limitation
+## Approved-draft lineage status
 
-### Draft release / canonical cleanup
+The immutable approved-draft ledger is now implemented.
 
-The current chat-based sync can sometimes clear Canonical Draft ID and set Draft Release Status=SENT using chat context about the exact approved draft.
+Gmail documents that a draft has a stable draft ID while its underlying draft-message ID changes when edited, and sending deletes the draft and creates a new SENT message ID. The worker therefore never expects draft-message ID = SENT-message ID.
 
-An event-driven worker must not guess this lineage.
-
-V0.1 therefore leaves those fields untouched.
-
-V0.2 should introduce an **immutable approved-draft snapshot ledger** captured before send, containing at minimum:
+Instead, pre-send capture stores:
 
 - Company page ID
-- canonical Gmail draft ID
-- draft message ID
+- stable Gmail draft ID
+- exact current draft-message ID
 - Gmail thread ID
 - recipient
 - subject
-- approved timestamp
+- normalized content fingerprint
 - QA-passed message ID
-- founder-approved message ID
-- optional normalized body hash
+- founder-approved draft/message IDs and approval time
 
-Only an exact matching provider SENT should be allowed to transition release/canonical state.
+A later provider SENT must match the snapshot's thread, recipient, subject and content fingerprint before release cleanup is even eligible.
+
+`FINALIZE_RELEASE_STATE` defaults to `false`. Staging must prove snapshot capture, mismatch rejection, exact match, retry/idempotency, and audit preservation before enabling it.
 
 ## Failure model
 
@@ -268,11 +319,13 @@ Examples:
 
 - Gmail history cursor missing → 500 / no processing.
 - Gmail history expired → no cursor advancement; requires explicit recovery.
-- Notion company match 0 or >1 → fail message.
+- Notion company match 0 → unrelated mail is safely skipped.
+- Notion company match >1 → fail message as ambiguous.
 - Existing duplicate provider events → fail message.
 - Notion write/read-back mismatch → fail message.
 - Immutable QA/founder fields changed unexpectedly → fail message.
 - Pub/Sub identity mismatch → reject.
+- Approved snapshot mismatch → fail/retry until explicitly resolved.
 - Retry while a live lease exists → fail/retry later.
 
 ## Production principle
