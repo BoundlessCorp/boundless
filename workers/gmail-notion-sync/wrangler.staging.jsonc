@@ -36,6 +36,7 @@
     "NOTION_OUTREACH_EVENTS_DATA_SOURCE_ID": "a872e9d9-2cef-4465-b636-b04ed0026368",
     "PROCESS_OUTBOUND": "true",
     "PROCESS_INBOUND": "false",
+    "WRITE_MODE": "observe",
     "FINALIZE_RELEASE_STATE": "false"
   }
 }
