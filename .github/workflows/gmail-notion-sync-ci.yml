@@ -1,0 +1,43 @@
+name: Gmail Notion Sync CI
+
+on:
+  pull_request:
+    paths:
+      - "workers/gmail-notion-sync/**"
+      - ".github/workflows/gmail-notion-sync-ci.yml"
+  push:
+    branches:
+      - "feature/gmail-notion-sync-v0-1"
+    paths:
+      - "workers/gmail-notion-sync/**"
+      - ".github/workflows/gmail-notion-sync-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workers/gmail-notion-sync
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: workers/gmail-notion-sync/package-lock.json
+
+      - name: Install
+        run: npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
