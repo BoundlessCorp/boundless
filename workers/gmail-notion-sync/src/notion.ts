@@ -170,15 +170,15 @@ export async function createOutboundEvent(
   });
 }
 
-const ADVANCED_PROSPECT_STATUSES = new Set([
+const NON_DOWNGRADABLE_PROSPECT_STATUSES = new Set([
   "Responded",
   "Qualified",
   "Discovery Booked",
-  "Proposal Sent",
-  "Negotiation",
-  "Closed Won",
-  "Closed Lost",
+  "Not Interested",
+  "Not a Fit",
+  "No Response",
   "Do Not Contact",
+  "Future Opportunity",
 ]);
 
 export async function reconcileCompanyAfterOutbound(
@@ -192,7 +192,7 @@ export async function reconcileCompanyAfterOutbound(
 
   const properties: Record<string, unknown> = {};
 
-  if (!currentStatus || !ADVANCED_PROSPECT_STATUSES.has(currentStatus)) {
+  if (!currentStatus || !NON_DOWNGRADABLE_PROSPECT_STATUSES.has(currentStatus)) {
     properties["Prospect Status"] = select(eventType === "First Touch" ? "Contacted" : "Follow-Up");
   }
 
