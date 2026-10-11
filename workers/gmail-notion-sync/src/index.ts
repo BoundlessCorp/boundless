@@ -1,3 +1,4 @@
+import { canFinalizeRelease, isApplyMode } from "./policy";
 import { captureApprovedDraft } from "./approval";
 import type { Env, GmailNotification, PubSubPushBody } from "./types";
 import { assertAdmin, verifyPubSubJwt } from "./auth";
@@ -88,7 +89,9 @@ export default {
         mode: {
           outbound: env.PROCESS_OUTBOUND === "true",
           inbound: env.PROCESS_INBOUND === "true",
-          releaseFinalization: env.FINALIZE_RELEASE_STATE === "true",
+          writeMode: env.WRITE_MODE,
+          notionWritesEnabled: isApplyMode(env.WRITE_MODE),
+          releaseFinalization: canFinalizeRelease(env.WRITE_MODE, env.FINALIZE_RELEASE_STATE),
         },
         ...(await healthSnapshot(env)),
       });
