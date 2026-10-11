@@ -71,15 +71,18 @@ Expected:
 ## T07 — Unknown SENT recipient
 
 Expected:
-- message marked failed in D1
-- no Event
+- treated as ordinary non-prospect mail
+- no Outreach Event
 - no Company mutation
-- cursor does not advance
-- Pub/Sub receives 5xx for retry / operator attention
+- no failed-message poison state
+- history range may advance after all relevant processing succeeds
 
 ## T08 — Multi-recipient SENT
 
-Expected: fail closed; no Notion write.
+Expected:
+- safely skipped because V0.1 only reconciles controlled one-recipient outreach
+- no Notion write
+- no cursor poison
 
 ## T09 — Valid first touch
 
@@ -101,9 +104,12 @@ Expected:
 
 ## T10 — Valid follow-up
 
-Precondition: prior outbound Outreach Event exists in same Gmail thread.
+Precondition: Gmail thread contains a prior provider-confirmed SENT message other than the current message.
 
-Expected Event Type=Follow-Up and safe Company stage update.
+Expected:
+- Event Type=Follow-Up from Gmail provider truth
+- safe Company stage update
+- Notion event history is not required to classify the touch
 
 ## T11 — Advanced-stage preservation
 
@@ -162,7 +168,79 @@ Expected:
 - retry safely replays range
 - failed message can succeed later without duplicating first message
 
-## T18 — Parallel Lite observation
+## T18 — Gmail history expiry
+
+Force an invalid/out-of-date startHistoryId.
+
+Expected:
+- Gmail 404 records a visible `gmail_history_gap`
+- cursor does not advance
+- normal processing stays paused
+- /admin/history/reseed refuses without explicit acknowledgment + audit note
+- approved reseed stores the current provider cursor and clears the gap
+
+## T19 — Approved-draft snapshot gate
+
+Attempt snapshot capture with each invalid condition:
+- QA != PASS
+- release != APPROVED
+- canonical draft mismatch
+- QA message mismatch
+- founder draft/message mismatch
+- missing Founder Approved At
+- recipient mismatch
+- Cc/Bcc present
+- Gmail draft-message ID changed after approval
+
+Expected: no approved ledger row.
+
+Then capture one exact valid approved version.
+
+Expected:
+- one active immutable approved snapshot
+- exact draft/version/thread/recipient/subject/fingerprint/audit IDs stored
+
+## T20 — Approved SENT mismatch
+
+With an active approved snapshot, alter subject/content/thread/recipient before sending.
+
+Expected:
+- provider SENT may be visible
+- release finalization is refused
+- Draft Release Status / Canonical Draft ID remain unchanged
+- mismatch becomes a visible processing failure
+
+## T21 — Exact approved SENT with finalization disabled
+
+With a matching snapshot and `FINALIZE_RELEASE_STATE=false`:
+
+Expected:
+- normal Outreach Event / Company reconciliation succeeds
+- snapshot match verifies
+- Draft Release Status and Canonical Draft ID remain unchanged
+- snapshot remains active for later controlled finalization
+
+## T22 — Exact approved SENT with finalization enabled
+
+After T19–T21 pass, enable `FINALIZE_RELEASE_STATE=true` in staging only.
+
+Expected:
+- exact matching provider SENT transitions Draft Release Status → SENT
+- Canonical Draft ID is cleared
+- QA/founder audit fields remain byte-for-byte unchanged
+- approved snapshot becomes consumed with SENT message ID
+
+## T23 — Release-finalization partial failure replay
+
+Simulate Notion successfully committing SENT/clear but D1 snapshot consumption failing.
+
+Expected on retry:
+- already-finalized Notion state is recognized as valid
+- no duplicate Event
+- no second destructive transition
+- ledger consumption completes safely
+
+## T24 — Parallel Lite observation
 
 For one controlled approved send:
 - Worker and Outbound Sync — Lite run in observation-compatible setup
@@ -171,6 +249,6 @@ For one controlled approved send:
 
 ## Exit criterion
 
-V0.1 is deployable only when T01–T17 pass and T18 has a documented cutover plan.
+Base event-driven reconciliation is deployable only when T01–T18 pass and T24 has a documented cutover plan.
 
-V0.1 does not own Draft Release Status / Canonical Draft ID cleanup until approved-draft snapshot lineage is implemented and separately tested.
+Release-state finalization must remain disabled until T19–T23 all pass in staging. Only then may `FINALIZE_RELEASE_STATE=true` be considered for production under explicit founder approval.
