@@ -126,3 +126,131 @@ export async function healthSnapshot(env: Env): Promise<Record<string, unknown>>
 export async function clearState(env: Env, key: string): Promise<void> {
   await env.SYNC_DB.prepare("DELETE FROM sync_state WHERE key = ?").bind(key).run();
 }
+
+
+export async function getActiveApprovedDraft(
+  env: Env,
+  companyPageId: string,
+): Promise<import("./types").ApprovedDraftSnapshot | null> {
+  const row = await env.SYNC_DB.prepare(
+    `SELECT
+       approval_id AS approvalId,
+       company_page_id AS companyPageId,
+       gmail_draft_id AS gmailDraftId,
+       draft_message_id AS draftMessageId,
+       provider_thread_id AS providerThreadId,
+       recipient,
+       subject,
+       content_fingerprint AS contentFingerprint,
+       qa_passed_message_id AS qaPassedMessageId,
+       founder_approved_draft_id AS founderApprovedDraftId,
+       founder_approved_message_id AS founderApprovedMessageId,
+       founder_approved_at AS founderApprovedAt,
+       state,
+       sent_message_id AS sentMessageId,
+       captured_at AS capturedAt
+     FROM approved_drafts
+     WHERE company_page_id = ? AND state = 'approved'
+     LIMIT 1`,
+  ).bind(companyPageId).first<import("./types").ApprovedDraftSnapshot>();
+
+  return row ?? null;
+}
+
+export async function saveApprovedDraft(
+  env: Env,
+  snapshot: import("./types").ApprovedDraftSnapshot,
+): Promise<import("./types").ApprovedDraftSnapshot> {
+  const existingExact = await env.SYNC_DB.prepare(
+    `SELECT
+       approval_id AS approvalId,
+       company_page_id AS companyPageId,
+       gmail_draft_id AS gmailDraftId,
+       draft_message_id AS draftMessageId,
+       provider_thread_id AS providerThreadId,
+       recipient,
+       subject,
+       content_fingerprint AS contentFingerprint,
+       qa_passed_message_id AS qaPassedMessageId,
+       founder_approved_draft_id AS founderApprovedDraftId,
+       founder_approved_message_id AS founderApprovedMessageId,
+       founder_approved_at AS founderApprovedAt,
+       state,
+       sent_message_id AS sentMessageId,
+       captured_at AS capturedAt
+     FROM approved_drafts
+     WHERE company_page_id = ? AND gmail_draft_id = ? AND draft_message_id = ?
+     LIMIT 1`,
+  ).bind(snapshot.companyPageId, snapshot.gmailDraftId, snapshot.draftMessageId)
+   .first<import("./types").ApprovedDraftSnapshot>();
+
+  if (existingExact?.state === "approved") return existingExact;
+
+  const now = new Date().toISOString();
+  await env.SYNC_DB.batch([
+    env.SYNC_DB.prepare(
+      `UPDATE approved_drafts
+       SET state='invalidated', invalidated_at=?, invalidation_reason=?
+       WHERE company_page_id=? AND state='approved'`,
+    ).bind(now, "Superseded by a newer explicitly validated approval snapshot", snapshot.companyPageId),
+    env.SYNC_DB.prepare(
+      `INSERT INTO approved_drafts(
+        approval_id, company_page_id, gmail_draft_id, draft_message_id,
+        provider_thread_id, recipient, subject, content_fingerprint,
+        qa_passed_message_id, founder_approved_draft_id, founder_approved_message_id,
+        founder_approved_at, state, captured_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?)
+      ON CONFLICT(company_page_id, gmail_draft_id, draft_message_id)
+      DO UPDATE SET
+        provider_thread_id=excluded.provider_thread_id,
+        recipient=excluded.recipient,
+        subject=excluded.subject,
+        content_fingerprint=excluded.content_fingerprint,
+        qa_passed_message_id=excluded.qa_passed_message_id,
+        founder_approved_draft_id=excluded.founder_approved_draft_id,
+        founder_approved_message_id=excluded.founder_approved_message_id,
+        founder_approved_at=excluded.founder_approved_at,
+        state='approved',
+        sent_message_id=NULL,
+        consumed_at=NULL,
+        invalidated_at=NULL,
+        invalidation_reason=NULL,
+        captured_at=excluded.captured_at`,
+    ).bind(
+      snapshot.approvalId,
+      snapshot.companyPageId,
+      snapshot.gmailDraftId,
+      snapshot.draftMessageId,
+      snapshot.providerThreadId,
+      snapshot.recipient,
+      snapshot.subject,
+      snapshot.contentFingerprint,
+      snapshot.qaPassedMessageId,
+      snapshot.founderApprovedDraftId,
+      snapshot.founderApprovedMessageId,
+      snapshot.founderApprovedAt,
+      snapshot.capturedAt,
+    ),
+  ]);
+
+  const saved = await getActiveApprovedDraft(env, snapshot.companyPageId);
+  if (!saved) throw new Error("Approved-draft snapshot write could not be read back");
+  return saved;
+}
+
+export async function consumeApprovedDraft(
+  env: Env,
+  approvalId: string,
+  sentMessageId: string,
+): Promise<void> {
+  const now = new Date().toISOString();
+  const result = await env.SYNC_DB.prepare(
+    `UPDATE approved_drafts
+     SET state='consumed', sent_message_id=?, consumed_at=?
+     WHERE approval_id=? AND state='approved'`,
+  ).bind(sentMessageId, now, approvalId).run();
+
+  if ((result.meta.changes ?? 0) !== 1) {
+    throw new Error("Approved-draft consumption failed or snapshot was already inactive");
+  }
+}
