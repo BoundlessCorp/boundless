@@ -4,6 +4,8 @@ import {
   greatestHistoryId,
   nextProspectStatus,
   shouldAdvanceTimestamp,
+  isApplyMode,
+  canFinalizeRelease,
 } from "./policy";
 
 describe("nextProspectStatus", () => {
@@ -63,5 +65,22 @@ describe("greatestHistoryId", () => {
 
   it("requires at least one history ID", () => {
     expect(() => greatestHistoryId()).toThrow();
+  });
+});
+
+
+describe("write mode safety", () => {
+  it("applies writes only for the exact apply mode", () => {
+    expect(isApplyMode("apply")).toBe(true);
+    expect(isApplyMode("observe")).toBe(false);
+    expect(isApplyMode("APPLY")).toBe(false);
+    expect(isApplyMode(undefined)).toBe(false);
+  });
+
+  it("requires both apply mode and explicit finalization flag", () => {
+    expect(canFinalizeRelease("apply", "true")).toBe(true);
+    expect(canFinalizeRelease("observe", "true")).toBe(false);
+    expect(canFinalizeRelease("apply", "false")).toBe(false);
+    expect(canFinalizeRelease(undefined, "true")).toBe(false);
   });
 });
