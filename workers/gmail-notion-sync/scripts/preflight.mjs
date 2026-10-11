@@ -1,12 +1,21 @@
 import { readFile } from "node:fs/promises";
 
-const configUrl = new URL("../wrangler.jsonc", import.meta.url);
+const configName = process.env.BOUNDLESS_WRANGLER_CONFIG || "wrangler.staging.jsonc";
+const configUrl = new URL(`../${configName}`, import.meta.url);
 const raw = await readFile(configUrl, "utf8");
 
 const errors = [];
 
 if (raw.includes("REPLACE_WITH_")) {
-  errors.push("wrangler.jsonc still contains REPLACE_WITH_* staging placeholders");
+  errors.push(`${configName} still contains REPLACE_WITH_* placeholders`);
+}
+
+if (configName.includes("staging") && !/"name"\s*:\s*"[^"]*staging[^"]*"/.test(raw)) {
+  errors.push("Staging preflight requires a Worker name containing 'staging'");
+}
+
+if (configName.includes("staging") && /"FINALIZE_RELEASE_STATE"\s*:\s*"true"/.test(raw)) {
+  errors.push("Staging configuration must begin with FINALIZE_RELEASE_STATE=false");
 }
 
 const finalizationEnabled =
@@ -27,7 +36,7 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log("Boundless sync worker preflight passed.");
+console.log(`Boundless sync worker preflight passed for ${configName}.`);
 console.log(
   `Release finalization: ${finalizationEnabled ? "ENABLED with explicit acknowledgement" : "disabled"}`,
 );
