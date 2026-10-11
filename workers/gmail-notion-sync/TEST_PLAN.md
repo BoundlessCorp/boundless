@@ -240,12 +240,17 @@ Expected on retry:
 - no second destructive transition
 - ledger consumption completes safely
 
-## T24 — Parallel Lite observation
+## T24 — Parallel Lite shadow observation
 
-For one controlled approved send:
-- Worker and Outbound Sync — Lite run in observation-compatible setup
-- compare resulting provider/event/company evidence
-- do not permit both systems to create the same event without idempotency protection
+Run V0.1 with `WRITE_MODE=observe` alongside Outbound Sync — Lite for controlled provider events.
+
+Expected:
+- V0.1 records D1 observations with predicted Company, event type, existing Notion event state, and approval-snapshot match state
+- V0.1 creates zero Outreach Events
+- V0.1 performs zero Company mutations
+- Gmail history cursor still advances after successful observation
+- predictions are compared against provider-backed Lite/Notion outcomes
+- mismatches become test evidence before any apply-mode cutover
 
 ## Exit criterion
 
