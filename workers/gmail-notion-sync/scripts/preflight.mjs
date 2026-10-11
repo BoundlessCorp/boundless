@@ -14,6 +14,10 @@ if (configName.includes("staging") && !/"name"\s*:\s*"[^"]*staging[^"]*"/.test(r
   errors.push("Staging preflight requires a Worker name containing 'staging'");
 }
 
+if (configName.includes("staging") && !/"WRITE_MODE"\s*:\s*"observe"/.test(raw)) {
+  errors.push("Staging configuration must use WRITE_MODE=observe");
+}
+
 if (configName.includes("staging") && /"FINALIZE_RELEASE_STATE"\s*:\s*"true"/.test(raw)) {
   errors.push("Staging configuration must begin with FINALIZE_RELEASE_STATE=false");
 }
