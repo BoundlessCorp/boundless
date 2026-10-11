@@ -64,3 +64,10 @@ export interface NotionQueryResponse {
   has_more?: boolean;
   next_cursor?: string | null;
 }
+
+
+export interface GmailThread {
+  id: string;
+  historyId?: string;
+  messages?: GmailMessage[];
+}
