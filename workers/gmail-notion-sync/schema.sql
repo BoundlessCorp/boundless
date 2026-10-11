@@ -66,3 +66,23 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_approved_drafts_one_active_company
 
 CREATE INDEX IF NOT EXISTS idx_approved_drafts_thread
   ON approved_drafts(provider_thread_id, state);
+
+
+CREATE TABLE IF NOT EXISTS sync_observations (
+  provider_message_id TEXT PRIMARY KEY,
+  provider_thread_id TEXT NOT NULL,
+  recipient TEXT NOT NULL,
+  company_page_id TEXT NOT NULL,
+  predicted_event_type TEXT NOT NULL,
+  provider_sent_at TEXT,
+  existing_notion_event_id TEXT,
+  approval_snapshot_state TEXT NOT NULL,
+  approval_id TEXT,
+  detail TEXT,
+  observation_count INTEGER NOT NULL DEFAULT 1,
+  first_observed_at TEXT NOT NULL,
+  last_observed_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_sync_observations_company
+  ON sync_observations(company_page_id, last_observed_at);
