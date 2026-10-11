@@ -62,7 +62,7 @@ function propertyDate(page: NotionPage, name: string): string | null {
   return page.properties[name]?.date?.start ?? null;
 }
 
-export async function findCompanyByPrimaryEmail(env: Env, email: string): Promise<NotionPage> {
+export async function findCompanyByPrimaryEmail(env: Env, email: string): Promise<NotionPage | null> {
   const response = await notionFetch<NotionQueryResponse>(
     env,
     `/data_sources/${env.NOTION_COMPANIES_DATA_SOURCE_ID}/query`,
@@ -78,13 +78,13 @@ export async function findCompanyByPrimaryEmail(env: Env, email: string): Promis
     },
   );
 
-  if (response.results.length !== 1) {
+  if (response.results.length > 1) {
     throw new Error(
-      `Company resolution failed for ${email}: expected exactly 1 match, found ${response.results.length}`,
+      `Company resolution is ambiguous for ${email}: found ${response.results.length} matches`,
     );
   }
 
-  return response.results[0];
+  return response.results[0] ?? null;
 }
 
 export async function findOutreachEventByProviderMessageId(
