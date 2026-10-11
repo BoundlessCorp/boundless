@@ -105,6 +105,7 @@ export async function failMessage(env: Env, providerMessageId: string, error: st
 export async function healthSnapshot(env: Env): Promise<Record<string, unknown>> {
   const historyId = await getState(env, "gmail_history_id");
   const watchExpiration = await getState(env, "gmail_watch_expiration");
+  const historyGap = await getState(env, "gmail_history_gap");
   const failed = await env.SYNC_DB.prepare(
     "SELECT COUNT(*) AS count FROM processed_messages WHERE status='failed'",
   ).first<{ count: number }>();
@@ -115,7 +116,13 @@ export async function healthSnapshot(env: Env): Promise<Record<string, unknown>>
   return {
     gmailHistoryId: historyId,
     gmailWatchExpiration: watchExpiration,
+    gmailHistoryGap: historyGap ? JSON.parse(historyGap) : null,
     failedMessages: failed?.count ?? 0,
     processingMessages: processing?.count ?? 0,
   };
+}
+
+
+export async function clearState(env: Env, key: string): Promise<void> {
+  await env.SYNC_DB.prepare("DELETE FROM sync_state WHERE key = ?").bind(key).run();
 }
