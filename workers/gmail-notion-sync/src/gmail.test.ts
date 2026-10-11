@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractSingleRecipient, header, isSent } from "./gmail";
+import { extractSingleRecipient, GmailApiError, header, isExpiredHistoryError, isSent } from "./gmail";
 import type { GmailMessage } from "./types";
 
 function message(headers: Array<{ name: string; value: string }>, labelIds: string[] = []): GmailMessage {
@@ -43,5 +43,14 @@ describe("Gmail safety helpers", () => {
   it("trusts Gmail SENT label rather than draft assumptions", () => {
     expect(isSent(message([], ["SENT"]))).toBe(true);
     expect(isSent(message([], ["DRAFT"]))).toBe(false);
+  });
+});
+
+
+describe("Gmail history errors", () => {
+  it("recognizes only 404 Gmail API errors as expired-history signals", () => {
+    expect(isExpiredHistoryError(new GmailApiError(404, "stale history"))).toBe(true);
+    expect(isExpiredHistoryError(new GmailApiError(401, "auth"))).toBe(false);
+    expect(isExpiredHistoryError(new Error("404 text is not enough"))).toBe(false);
   });
 });
