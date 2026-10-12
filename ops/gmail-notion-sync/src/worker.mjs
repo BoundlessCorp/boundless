@@ -3,7 +3,7 @@
 // Deploy is deliberately read-only until WRITES_ENABLED=true. No secrets in source.
 const VERSION = "2025-09-03";
 const MAX_PAGES = 5, PAGE_SIZE = 100, MAX_JOBS = 12;
-const ADVANCED = new Set(["Responded","Qualified","Discovery Booked","Not Interested","Not a Fit","Do Not Contact","Future Opportunity"]);
+const ADVANCED = new Set(["Follow-Up","Responded","Qualified","Discovery Booked","No Response","Not Interested","Not a Fit","Do Not Contact","Future Opportunity"]);
 const SECOND = 1000;
 export function normalizeEmail(s) {
   const match = String(s || "").match(/<([^<>@\s]+@[^<>@\s]+)>/);
