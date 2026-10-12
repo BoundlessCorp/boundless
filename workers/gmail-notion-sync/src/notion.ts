@@ -235,31 +235,54 @@ export async function fetchPage(env: Env, pageId: string): Promise<NotionPage> {
   return notionFetch(env, `/pages/${pageId}`);
 }
 
+export interface OutboundEventReadback {
+  providerMessageId: string;
+  providerThreadId: string;
+  companyPageId: string;
+  eventType: "First Touch" | "Follow-Up";
+  sentAt: string;
+}
+
+export function assertOutboundEventReadback(event: NotionPage, input: OutboundEventReadback): void {
+  if (propertyText(event, "Provider Message ID") !== input.providerMessageId) {
+    throw new Error("Read-back failed: Outreach Event provider message ID mismatch");
+  }
+  if (propertyText(event, "Provider Thread ID") !== input.providerThreadId) {
+    throw new Error("Read-back failed: Outreach Event provider thread ID mismatch");
+  }
+  if (propertySelect(event, "Event Type") !== input.eventType ||
+      propertySelect(event, "Direction") !== "Outbound" ||
+      propertySelect(event, "Channel") !== "Email") {
+    throw new Error("Read-back failed: Outreach Event type/direction/channel mismatch");
+  }
+  if (!(event.properties.Company?.relation ?? []).some((r: any) => r.id === input.companyPageId)) {
+    throw new Error("Read-back failed: Outreach Event company relation mismatch");
+  }
+  const sentAtMs = Date.parse(input.sentAt);
+  const eventAtMs = Date.parse(propertyDate(event, "Event Date") ?? "");
+  if (!Number.isFinite(sentAtMs) || !Number.isFinite(eventAtMs) ||
+      Math.floor(eventAtMs / 60_000) !== Math.floor(sentAtMs / 60_000)) {
+    throw new Error("Read-back failed: Outreach Event timestamp differs from provider SENT minute");
+  }
+}
+
 export async function verifyReconciliation(
   env: Env,
-  input: {
-    providerMessageId: string;
-    companyPageId: string;
-    eventPageId: string;
-    sentAt: string;
-  },
+  input: OutboundEventReadback & { eventPageId: string },
 ): Promise<void> {
   const [event, company] = await Promise.all([
     fetchPage(env, input.eventPageId),
     fetchPage(env, input.companyPageId),
   ]);
 
-  if (propertyText(event, "Provider Message ID") !== input.providerMessageId) {
-    throw new Error("Read-back failed: Outreach Event provider message ID mismatch");
-  }
+  assertOutboundEventReadback(event, input);
 
-  const companyRelation = event.properties.Company?.relation ?? [];
-  if (!companyRelation.some((r: any) => r.id === input.companyPageId)) {
-    throw new Error("Read-back failed: Outreach Event company relation mismatch");
-  }
-
-  const lastContact = propertyDate(company, "Last Contact");
-  if (!lastContact || new Date(lastContact).getTime() < new Date(input.sentAt).getTime()) {
+  const lastContactMs = Date.parse(propertyDate(company, "Last Contact") ?? "");
+  const sentAtMs = Date.parse(input.sentAt);
+  // Notion may store a date/time at minute precision. Compare provider-minute
+  // buckets while still refusing an older contact timestamp.
+  if (!Number.isFinite(lastContactMs) || !Number.isFinite(sentAtMs) ||
+      Math.floor(lastContactMs / 60_000) < Math.floor(sentAtMs / 60_000)) {
     throw new Error("Read-back failed: Company Last Contact is older than provider SENT");
   }
 
