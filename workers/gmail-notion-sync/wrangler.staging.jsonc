@@ -23,7 +23,7 @@
     {
       "binding": "SYNC_DB",
       "database_name": "boundless-gmail-notion-sync-staging",
-      "database_id": "REPLACE_WITH_STAGING_D1_DATABASE_ID"
+      "database_id": "4f58e6ec-073b-4ac3-8abf-5af5bd8f98fa"
     }
   ],
   "vars": {
