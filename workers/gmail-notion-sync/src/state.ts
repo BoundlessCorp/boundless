@@ -30,6 +30,8 @@ export async function logDelivery(
   ).bind(pubsubMessageId, historyId, status, detail ?? null, nowIso()).run();
 }
 
+// Claiming must be an atomic D1 write, not SELECT then unconditional UPDATE.
+// Pub/Sub can deliver the same notification concurrently to separate Workers.
 export async function claimMessage(
   env: Env,
   input: {
@@ -41,43 +43,42 @@ export async function claimMessage(
   },
 ): Promise<"claimed" | "already_succeeded" | "busy"> {
   const now = new Date();
+  const nowText = now.toISOString();
   const leaseExpires = new Date(now.getTime() + 5 * 60_000).toISOString();
 
-  const existing = await env.SYNC_DB.prepare(
-    "SELECT status, lease_expires_at FROM processed_messages WHERE provider_message_id = ?",
-  ).bind(input.providerMessageId).first<{ status: string; lease_expires_at: string | null }>();
+  const inserted = await env.SYNC_DB.prepare(
+    `INSERT OR IGNORE INTO processed_messages(
+      provider_message_id, provider_thread_id, direction, event_type,
+      gmail_internal_date, status, lease_expires_at, attempt_count, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, 'processing', ?, 1, ?, ?)`,
+  ).bind(
+    input.providerMessageId,
+    input.providerThreadId,
+    input.direction,
+    input.eventType,
+    input.gmailInternalDate ?? null,
+    leaseExpires,
+    nowText,
+    nowText,
+  ).run();
+  if (inserted.meta.changes === 1) return "claimed";
 
-  if (existing?.status === "succeeded") return "already_succeeded";
-  if (existing?.status === "processing" && existing.lease_expires_at && existing.lease_expires_at > now.toISOString()) {
-    return "busy";
-  }
-
-  if (!existing) {
-    await env.SYNC_DB.prepare(
-      `INSERT INTO processed_messages(
-        provider_message_id, provider_thread_id, direction, event_type,
-        gmail_internal_date, status, lease_expires_at, attempt_count, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, 'processing', ?, 1, ?, ?)`,
-    ).bind(
-      input.providerMessageId,
-      input.providerThreadId,
-      input.direction,
-      input.eventType,
-      input.gmailInternalDate ?? null,
-      leaseExpires,
-      now.toISOString(),
-      now.toISOString(),
-    ).run();
-    return "claimed";
-  }
-
-  await env.SYNC_DB.prepare(
+  // A concurrent execution's still-live lease may not be overwritten.
+  // This predicate is checked atomically by D1, not against a stale read.
+  const reclaimed = await env.SYNC_DB.prepare(
     `UPDATE processed_messages
      SET status='processing', lease_expires_at=?, attempt_count=attempt_count+1,
          last_error=NULL, updated_at=?
-     WHERE provider_message_id=?`,
-  ).bind(leaseExpires, now.toISOString(), input.providerMessageId).run();
-  return "claimed";
+     WHERE provider_message_id=? AND status!='succeeded'
+       AND (status!='processing' OR lease_expires_at IS NULL OR lease_expires_at <= ?)`,
+  ).bind(leaseExpires, nowText, input.providerMessageId, nowText).run();
+  if (reclaimed.meta.changes === 1) return "claimed";
+
+  const existing = await env.SYNC_DB.prepare(
+    "SELECT status FROM processed_messages WHERE provider_message_id = ?",
+  ).bind(input.providerMessageId).first<{ status: string }>();
+
+  return existing?.status === "succeeded" ? "already_succeeded" : "busy";
 }
 
 export async function completeMessage(
