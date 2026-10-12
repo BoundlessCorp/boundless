@@ -3,6 +3,7 @@ import {
   extractSingleRecipient,
   GmailApiError,
   header,
+  historyCandidates,
   isExpiredHistoryError,
   isSent,
   threadHasPriorSent,
@@ -92,5 +93,26 @@ describe("Gmail thread truth", () => {
         "current",
       ),
     ).toBe(false);
+  });
+});
+
+describe("Gmail SENT history coverage", () => {
+  it("catches a new outbound message and the SENT-label transition of a draft", () => {
+    expect(historyCandidates({
+      id: "100",
+      messagesAdded: [{ message: { id: "created-and-sent", threadId: "t" } }],
+      labelsAdded: [
+        { message: { id: "existing-draft-sent", threadId: "t" }, labelIds: ["SENT"] },
+        { message: { id: "unrelated-inbox", threadId: "t" }, labelIds: ["INBOX"] },
+      ],
+    })).toEqual(["created-and-sent", "existing-draft-sent"]);
+  });
+
+  it("deduplicates a SENT message surfaced by both change categories", () => {
+    expect(historyCandidates({
+      id: "101",
+      messagesAdded: [{ message: { id: "same", threadId: "t" } }],
+      labelsAdded: [{ message: { id: "same", threadId: "t" }, labelIds: ["SENT"] }],
+    })).toEqual(["same"]);
   });
 });
