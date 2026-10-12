@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { assertCompanyApprovalForDraft, companyAuditSnapshot, findCompanyByPrimaryEmail } from "./notion";
+import { assertCompanyApprovalForDraft, assertOutboundEventReadback, companyAuditSnapshot, findCompanyByPrimaryEmail } from "./notion";
 import type { Env, NotionPage } from "./types";
 
 function text(value: string) {
@@ -123,5 +123,49 @@ describe("Company identity resolution", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe("Provider-backed Outreach Event readback", () => {
+  const expected = {
+    providerMessageId: "sent-123",
+    providerThreadId: "thread-456",
+    companyPageId: "company-1",
+    eventType: "First Touch" as const,
+    sentAt: "2026-10-12T17:20:23.000Z",
+  };
+  const original: NotionPage = {
+    id: "event-1",
+    properties: {
+      "Provider Message ID": text("sent-123"),
+      "Provider Thread ID": text("thread-456"),
+      "Event Type": { type: "select", select: { name: "First Touch" } },
+      "Direction": { type: "select", select: { name: "Outbound" } },
+      "Channel": { type: "select", select: { name: "Email" } },
+      "Company": { type: "relation", relation: [{ id: "company-1" }] },
+      "Event Date": { type: "date", date: { start: "2026-10-12T17:20:00.000Z" } },
+    },
+  };
+  it("accepts the provider's minute when Notion rounds away seconds", () => {
+    expect(() => assertOutboundEventReadback(original, expected)).not.toThrow();
+  });
+  it("rejects an incorrect thread, direction, or event type", () => {
+    expect(() => assertOutboundEventReadback(
+      { ...original, properties: { ...original.properties, "Provider Thread ID": text("other") } }, expected,
+    )).toThrow(/thread ID mismatch/);
+    expect(() => assertOutboundEventReadback(
+      { ...original, properties: { ...original.properties, "Direction": { type: "select", select: { name: "Inbound" } } } }, expected,
+    )).toThrow(/type\/direction\/channel mismatch/);
+    expect(() => assertOutboundEventReadback(
+      { ...original, properties: { ...original.properties, "Event Type": { type: "select", select: { name: "Follow-Up" } } } }, expected,
+    )).toThrow(/type\/direction\/channel mismatch/);
+  });
+  it("rejects a stale event minute or wrong Company relation", () => {
+    expect(() => assertOutboundEventReadback(
+      { ...original, properties: { ...original.properties, "Event Date": { type: "date", date: { start: "2026-10-12T17:19:59.000Z" } } } }, expected,
+    )).toThrow(/timestamp differs/);
+    expect(() => assertOutboundEventReadback(
+      { ...original, properties: { ...original.properties, "Company": { type: "relation", relation: [{ id: "wrong" }] } } }, expected,
+    )).toThrow(/company relation mismatch/);
   });
 });
