@@ -172,9 +172,9 @@ async function updateCompany(env,token,msg,company,followup) {
     patch["Canonical Draft ID"]={rich_text:[]};
   } else if(rel==="HOLD" && canonical) {
     // A different HOLD draft can exist for a contacted Company; do not clear it.
-  } else if(!canonical && rel!=="SENT" && rel!=="HOLD") {
-    patch["Draft Release Status"]={select:{name:"SENT"}};
   }
+  // No fallback to SENT: provider evidence alone never lifts STOP, HOLD,
+  // missing founder approval, or any other release restriction.
   if(env.WRITES_ENABLED!=="true") return {state:"dry_run"};
   const audit={
     qa:textOf(p,"QA Passed Message ID"),
