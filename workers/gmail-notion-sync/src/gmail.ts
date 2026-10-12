@@ -47,6 +47,19 @@ export async function getProfile(env: Env): Promise<{ historyId: string; emailAd
   return gmailFetch(env, `/users/${encodeURIComponent(env.GMAIL_USER)}/profile`);
 }
 
+// Gmail can confirm outbound messages both when a message enters the mailbox
+// and when the SENT label is applied to an existing message (e.g. a draft).
+export function historyCandidates(record: NonNullable<GmailHistoryResponse["history"]>[number]): string[] {
+  const ids = new Set<string>();
+  for (const entry of record.messagesAdded ?? []) {
+    if (entry.message?.id) ids.add(entry.message.id);
+  }
+  for (const entry of record.labelsAdded ?? []) {
+    if (entry.labelIds?.includes("SENT") && entry.message?.id) ids.add(entry.message.id);
+  }
+  return [...ids];
+}
+
 export async function listHistory(
   env: Env,
   startHistoryId: string,
@@ -58,7 +71,6 @@ export async function listHistory(
   do {
     const params = new URLSearchParams({
       startHistoryId,
-      historyTypes: "messageAdded",
       maxResults: "500",
     });
     if (pageToken) params.set("pageToken", pageToken);
@@ -70,7 +82,7 @@ export async function listHistory(
 
     for (const record of page.history ?? []) {
       if (BigInt(record.id) > BigInt(latestHistoryId)) latestHistoryId = record.id;
-      for (const added of record.messagesAdded ?? []) messageIds.add(added.message.id);
+      for (const id of historyCandidates(record)) messageIds.add(id);
     }
 
     if (page.historyId && BigInt(page.historyId) > BigInt(latestHistoryId)) {
