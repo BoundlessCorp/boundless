@@ -118,7 +118,9 @@ async function processOutboundMessage(
       await reconcileCompanyAfterOutbound(env, company, existingType, sentAt);
       await verifyReconciliation(env, {
         providerMessageId: message.id,
+        providerThreadId: message.threadId,
         companyPageId: company.id,
+        eventType: existingType,
         eventPageId: existingEvent.id,
         sentAt,
       });
@@ -155,7 +157,9 @@ async function processOutboundMessage(
 
     await verifyReconciliation(env, {
       providerMessageId: message.id,
+      providerThreadId: message.threadId,
       companyPageId: company.id,
+      eventType,
       eventPageId: event.id,
       sentAt,
     });
