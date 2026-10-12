@@ -14,6 +14,8 @@ export function nextProspectStatus(
   eventType: "First Touch" | "Follow-Up",
 ): string | null {
   if (currentStatus && NON_DOWNGRADABLE_PROSPECT_STATUSES.has(currentStatus)) return null;
+  // Replaying an older first touch must never demote an existing follow-up.
+  if (currentStatus === "Follow-Up" && eventType === "First Touch") return null;
   return eventType === "First Touch" ? "Contacted" : "Follow-Up";
 }
 
