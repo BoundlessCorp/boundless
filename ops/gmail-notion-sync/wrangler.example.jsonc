@@ -1,0 +1,21 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "boundless-gmail-notion-sync",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-09-20",
+  "observability": {"enabled": true},
+  "triggers": {"crons": ["*/10 * * * *"]},
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "boundless-gmail-notion-sync",
+    "database_id": "REPLACE_WITH_REAL_D1_DATABASE_UUID",
+    "migrations_dir": "migrations"
+  }],
+  "vars": {
+    "GMAIL_ADDRESS": "jason@boundlesscorp.ca",
+    "NOTION_COMPANIES_SOURCE": "5e25023c-6c34-41ee-94cd-319d0b957c60",
+    "NOTION_EVENTS_SOURCE": "a872e9d9-2cef-4465-b636-b04ed0026368",
+    "START_AFTER_UNIX": "REPLACE_WITH_GO_LIVE_UNIX_SECONDS",
+    "WRITES_ENABLED": "false"
+  }
+}
