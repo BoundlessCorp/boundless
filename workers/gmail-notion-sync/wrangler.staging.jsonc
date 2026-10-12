@@ -28,7 +28,7 @@
   ],
   "vars": {
     "GMAIL_USER": "jason@boundlesscorp.ca",
-    "GMAIL_PUBSUB_TOPIC": "projects/REPLACE_WITH_GCP_PROJECT/topics/boundless-gmail-events-staging",
+    "GMAIL_PUBSUB_TOPIC": "projects/boundless-gmail-sync-staging/topics/boundless-gmail-events-staging",
     "PUBSUB_AUDIENCE": "https://REPLACE_WITH_STAGING_WORKER_HOST/pubsub/gmail",
     "PUBSUB_SERVICE_ACCOUNT_EMAIL": "REPLACE_WITH_STAGING_PUSH_SERVICE_ACCOUNT",
     "NOTION_VERSION": "2026-03-11",
