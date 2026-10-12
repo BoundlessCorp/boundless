@@ -64,47 +64,23 @@ function propertyDate(page: NotionPage, name: string): string | null {
 }
 
 export async function findCompanyByPrimaryEmail(env: Env, email: string): Promise<NotionPage | null> {
-  const response = await notionFetch<NotionQueryResponse>(
-    env,
-    `/data_sources/${env.NOTION_COMPANIES_DATA_SOURCE_ID}/query`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        filter: {
-          property: "Primary Contact Email",
-          email: { equals: email },
-        },
-        page_size: 3,
-      }),
-    },
-  );
-
-  if (response.results.length > 1) {
-    throw new Error(
-      `Company resolution is ambiguous for ${email}: found ${response.results.length} exact matches`,
-    );
-  }
-
-  if (response.results.length === 1) return response.results[0];
-
-  // Email addresses are operationally case-insensitive, but external stores may
-  // preserve original casing. Fall back to a bounded paginated scan rather than
-  // letting capitalization create a false "unknown prospect" result.
+  // A single exact-match filter is insufficient: a second Company might store
+  // the same mailbox with different capitalization. Never guess in that case.
   const normalized = email.trim().toLowerCase();
+  if (!normalized) throw new Error("Cannot resolve blank Company email");
   const matches: NotionPage[] = [];
   let cursor: string | null | undefined;
+  let pages = 0;
 
   do {
+    if (++pages > 100) throw new Error("Company lookup exceeded 100 pages; refusing incomplete identity check");
     const page = await notionFetch<NotionQueryResponse>(
       env,
       `/data_sources/${env.NOTION_COMPANIES_DATA_SOURCE_ID}/query`,
       {
         method: "POST",
         body: JSON.stringify({
-          filter: {
-            property: "Primary Contact Email",
-            email: { is_not_empty: true },
-          },
+          filter: { property: "Primary Contact Email", email: { is_not_empty: true } },
           page_size: 100,
           ...(cursor ? { start_cursor: cursor } : {}),
         }),
@@ -122,6 +98,9 @@ export async function findCompanyByPrimaryEmail(env: Env, email: string): Promis
       }
     }
 
+    if (page.has_more && !page.next_cursor) {
+      throw new Error("Incomplete Notion Company lookup: pagination cursor missing");
+    }
     cursor = page.has_more ? page.next_cursor : null;
   } while (cursor);
 
