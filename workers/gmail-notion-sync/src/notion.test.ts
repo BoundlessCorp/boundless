@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { assertCompanyApprovalForDraft, companyAuditSnapshot } from "./notion";
-import type { NotionPage } from "./types";
+import { describe, expect, it, vi } from "vitest";
+import { assertCompanyApprovalForDraft, companyAuditSnapshot, findCompanyByPrimaryEmail } from "./notion";
+import type { Env, NotionPage } from "./types";
 
 function text(value: string) {
   return { type: "rich_text", rich_text: value ? [{ plain_text: value }] : [] };
@@ -80,5 +80,48 @@ describe("company approval gate", () => {
       founderApprovedMessageId: "draft-message-1",
       founderApprovedAt: "2026-10-12T16:00:00.000Z",
     });
+  });
+});
+
+describe("Company identity resolution", () => {
+  const env = {
+    NOTION_TOKEN: "test-only",
+    NOTION_VERSION: "2026-03-11",
+    NOTION_COMPANIES_DATA_SOURCE_ID: "test-source",
+  } as unknown as Env;
+
+  it("rejects same mailbox repeated in different capitalization", async () => {
+    const response = {
+      ok: true,
+      json: async () => ({
+        results: [
+          company({ "Primary Contact Email": { type: "email", email: "Owner@Example.com" } }),
+          { ...company({ "Primary Contact Email": { type: "email", email: "owner@example.com" } }), id: "company-2" },
+        ],
+        has_more: false,
+      }),
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response));
+    try {
+      await expect(findCompanyByPrimaryEmail(env, "owner@example.com")).rejects.toThrow(
+        /multiple case-insensitive matches/,
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("refuses incomplete pagination instead of certifying uniqueness", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ results: [], has_more: true, next_cursor: null }),
+    }));
+    try {
+      await expect(findCompanyByPrimaryEmail(env, "owner@example.com")).rejects.toThrow(
+        /pagination cursor missing/,
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
