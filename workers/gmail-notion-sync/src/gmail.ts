@@ -127,6 +127,16 @@ export function isSent(message: GmailMessage): boolean {
   return message.labelIds?.includes("SENT") ?? false;
 }
 
+// Provider timestamps must be genuine. Never create a purported SENT event at
+// the Worker's current clock time when Gmail omitted or corrupted internalDate.
+export function providerSentAt(message: GmailMessage): string {
+  const raw = message.internalDate;
+  if (!raw || !/^\\d+$/.test(raw)) throw new Error("Missing or invalid Gmail SENT internalDate");
+  const ms = Number(raw);
+  if (!Number.isSafeInteger(ms) || ms <= 0) throw new Error("Invalid Gmail SENT timestamp");
+  return new Date(ms).toISOString();
+}
+
 
 export async function getThread(env: Env, threadId: string): Promise<GmailThread> {
   const params = new URLSearchParams({ format: "metadata" });
@@ -141,8 +151,17 @@ export async function getThread(env: Env, threadId: string): Promise<GmailThread
 }
 
 export function threadHasPriorSent(thread: GmailThread, currentMessageId: string): boolean {
-  return (thread.messages ?? []).some(
-    (message) => message.id !== currentMessageId && (message.labelIds?.includes("SENT") ?? false),
+  const messages = thread.messages ?? [];
+  const current = messages.find((message) => message.id === currentMessageId);
+  const currentDate = current?.internalDate ? Number(current.internalDate) : NaN;
+  // Without a trustworthy date we cannot establish a historical predecessor.
+  if (!Number.isSafeInteger(currentDate)) return false;
+  return messages.some((message) =>
+    message.id !== currentMessageId &&
+    message.labelIds?.includes("SENT") === true &&
+    !!message.internalDate &&
+    Number.isSafeInteger(Number(message.internalDate)) &&
+    Number(message.internalDate) < currentDate,
   );
 }
 
