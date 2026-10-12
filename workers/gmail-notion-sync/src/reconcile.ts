@@ -8,6 +8,7 @@ import {
   isExpiredHistoryError,
   isSent,
   listHistory,
+  providerSentAt,
   threadHasPriorSent,
 } from "./gmail";
 import {
@@ -45,6 +46,10 @@ async function processOutboundMessage(
   if (!isSent(message)) return "skipped";
   if (env.PROCESS_OUTBOUND !== "true") return "skipped";
 
+  // Provider time is required before an Event or Company Last Contact can
+  // represent verified SENT. Do not silently substitute the Worker's clock.
+  const sentAt = providerSentAt(message);
+
   const recipient = extractSingleRecipient(message);
   if (!recipient) {
     // Multi-recipient or malformed outbound mail is outside V0.1's controlled
@@ -65,9 +70,6 @@ async function processOutboundMessage(
   const existingEvent = await findOutreachEventByProviderMessageId(env, message.id);
 
   if (!isApplyMode(env.WRITE_MODE)) {
-    const sentAt = message.internalDate
-      ? new Date(Number(message.internalDate)).toISOString()
-      : null;
     const approval = await inspectApprovedSent(env, company, message, recipient);
     const approvalSnapshotState = !approval.hasSnapshot
       ? "none"
@@ -98,9 +100,6 @@ async function processOutboundMessage(
   if (existingEvent) {
     const existingType =
       existingEvent.properties["Event Type"]?.select?.name === "Follow-Up" ? "Follow-Up" : "First Touch";
-    const sentAt = message.internalDate
-      ? new Date(Number(message.internalDate)).toISOString()
-      : new Date().toISOString();
 
     const claim = await claimMessage(env, {
       providerMessageId: message.id,
@@ -149,9 +148,6 @@ async function processOutboundMessage(
   if (claim === "busy") throw new Error(`Message ${message.id} is already being processed under a live lease`);
 
   try {
-    const sentAt = message.internalDate
-      ? new Date(Number(message.internalDate)).toISOString()
-      : new Date().toISOString();
 
     const before = companyAuditSnapshot(company);
     const event = await createOutboundEvent(env, { message, company, eventType });
