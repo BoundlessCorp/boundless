@@ -25,4 +25,7 @@ test("only eligible approved live-version drafts can be cleared",()=>{
   assert.equal(shouldClearDraft(p),true);
   assert.equal(shouldClearDraft({...p,"Founder Approved Message ID":rt("changed")}),false);
   assert.equal(shouldClearDraft({...p,"Draft Release Status":sel("HOLD")}),false);
+  assert.equal(shouldClearDraft({...p,"Draft Release Status":sel("STOP")}),false);
+  assert.equal(shouldClearDraft({...p,"Canonical Draft ID":rt("")}),false);
+  assert.equal(shouldClearDraft({...p,"Founder Approved Draft ID":rt("")}),false);
 });
