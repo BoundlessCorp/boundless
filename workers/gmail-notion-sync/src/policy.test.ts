@@ -14,6 +14,11 @@ describe("nextProspectStatus", () => {
     expect(nextProspectStatus("Contacted", "Follow-Up")).toBe("Follow-Up");
   });
 
+  it("does not downgrade Follow-Up when an earlier first touch is replayed", () => {
+    expect(nextProspectStatus("Follow-Up", "First Touch")).toBeNull();
+    expect(nextProspectStatus("Follow-Up", "Follow-Up")).toBe("Follow-Up");
+  });
+
   it.each([
     "Responded",
     "Qualified",
