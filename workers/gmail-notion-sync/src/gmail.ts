@@ -131,7 +131,7 @@ export function isSent(message: GmailMessage): boolean {
 // the Worker's current clock time when Gmail omitted or corrupted internalDate.
 export function providerSentAt(message: GmailMessage): string {
   const raw = message.internalDate;
-  if (!raw || !/^\\d+$/.test(raw)) throw new Error("Missing or invalid Gmail SENT internalDate");
+  if (!raw || !/^\d+$/.test(raw)) throw new Error("Missing or invalid Gmail SENT internalDate");
   const ms = Number(raw);
   if (!Number.isSafeInteger(ms) || ms <= 0) throw new Error("Invalid Gmail SENT timestamp");
   return new Date(ms).toISOString();
