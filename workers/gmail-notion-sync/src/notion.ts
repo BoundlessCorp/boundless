@@ -1,6 +1,6 @@
 import { nextProspectStatus, shouldAdvanceTimestamp } from "./policy";
 import type { Env, GmailMessage, NotionPage, NotionQueryResponse } from "./types";
-import { extractSingleRecipient, header } from "./gmail";
+import { extractSingleRecipient, header, providerSentAt } from "./gmail";
 
 const NOTION_API = "https://api.notion.com/v1";
 
@@ -181,9 +181,7 @@ export async function createOutboundEvent(
     eventType: "First Touch" | "Follow-Up";
   },
 ): Promise<NotionPage> {
-  const sentAt = input.message.internalDate
-    ? new Date(Number(input.message.internalDate)).toISOString()
-    : new Date().toISOString();
+  const sentAt = providerSentAt(input.message);
 
   const companyName = propertyText(input.company, "Company Name") || "Company";
   const recipient = extractSingleRecipient(input.message);
