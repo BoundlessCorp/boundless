@@ -67,6 +67,7 @@ export interface GmailHistoryResponse {
   history?: Array<{
     id: string;
     messagesAdded?: Array<{ message: { id: string; threadId: string } }>;
+    labelsAdded?: Array<{ message: { id: string; threadId: string }; labelIds: string[] }>;
   }>;
   nextPageToken?: string;
   historyId?: string;
