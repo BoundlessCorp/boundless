@@ -6,6 +6,7 @@ import {
   historyCandidates,
   isExpiredHistoryError,
   isSent,
+  providerSentAt,
   threadHasPriorSent,
 } from "./gmail";
 import type { GmailMessage } from "./types";
@@ -71,8 +72,8 @@ describe("Gmail thread truth", () => {
         {
           id: "t1",
           messages: [
-            { id: "old", threadId: "t1", labelIds: ["SENT"] },
-            { id: "current", threadId: "t1", labelIds: ["SENT"] },
+            { id: "old", threadId: "t1", labelIds: ["SENT"], internalDate: "1000" },
+            { id: "current", threadId: "t1", labelIds: ["SENT"], internalDate: "2000" },
           ],
         },
         "current",
@@ -86,8 +87,8 @@ describe("Gmail thread truth", () => {
         {
           id: "t1",
           messages: [
-            { id: "incoming", threadId: "t1", labelIds: ["INBOX"] },
-            { id: "current", threadId: "t1", labelIds: ["SENT"] },
+            { id: "incoming", threadId: "t1", labelIds: ["INBOX"], internalDate: "1000" },
+            { id: "current", threadId: "t1", labelIds: ["SENT"], internalDate: "2000" },
           ],
         },
         "current",
@@ -114,5 +115,24 @@ describe("Gmail SENT history coverage", () => {
       messagesAdded: [{ message: { id: "same", threadId: "t" } }],
       labelsAdded: [{ message: { id: "same", threadId: "t" }, labelIds: ["SENT"] }],
     })).toEqual(["same"]);
+  });
+});
+
+describe("Provider time and historical thread ordering", () => {
+  it("never invents the date of a sent message", () => {
+    expect(providerSentAt({ id: "m", threadId: "t", internalDate: "1791801000000" }))
+      .toBe(new Date(1791801000000).toISOString());
+    expect(() => providerSentAt({ id: "m", threadId: "t" })).toThrow(/internalDate/);
+    expect(() => providerSentAt({ id: "m", threadId: "t", internalDate: "bad" })).toThrow(/internalDate/);
+  });
+
+  it("does not treat a later SENT in the same thread as a prior follow-up", () => {
+    expect(threadHasPriorSent({
+      id: "t",
+      messages: [
+        { id: "older", threadId: "t", labelIds: ["SENT"], internalDate: "1000" },
+        { id: "later", threadId: "t", labelIds: ["SENT"], internalDate: "2000" },
+      ],
+    }, "older")).toBe(false);
   });
 });
