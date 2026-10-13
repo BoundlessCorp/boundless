@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 
-const configName = process.env.BOUNDLESS_WRANGLER_CONFIG || "wrangler.staging.jsonc";
+const configName = process.argv[2] || process.env.BOUNDLESS_WRANGLER_CONFIG || "wrangler.staging.jsonc";
 const configUrl = new URL(`../${configName}`, import.meta.url);
 const raw = await readFile(configUrl, "utf8");
 
