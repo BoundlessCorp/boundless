@@ -1,0 +1,24 @@
+{
+  "name": "@boundless/gmail-notion-sync",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --config wrangler.jsonc",
+    "deploy": "node -e \"console.error('Production deploy is intentionally disabled on V0.1. Use npm run deploy:staging.'); process.exit(1)\"",
+    "typecheck": "tsc --noEmit",
+    "d1:init:local": "wrangler d1 execute boundless-gmail-notion-sync --local --file=schema.sql --config wrangler.jsonc",
+    "d1:init:remote": "node -e \"console.error('Generic remote D1 initialization is disabled. Use npm run d1:init:staging until production cutover is explicitly approved.'); process.exit(1)\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "preflight": "node scripts/preflight.mjs",
+    "preflight:staging": "node scripts/preflight.mjs wrangler.staging.jsonc",
+    "deploy:staging": "npm run preflight:staging && wrangler deploy --config wrangler.staging.jsonc",
+    "d1:init:staging": "wrangler d1 execute boundless-gmail-notion-sync-staging --remote --file=schema.sql --config wrangler.staging.jsonc"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261011.1",
+    "typescript": "7.0.2",
+    "wrangler": "4.149.0",
+    "vitest": "5.0.3"
+  }
+}

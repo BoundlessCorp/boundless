@@ -1,0 +1,42 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "boundless-gmail-notion-sync-staging",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "secrets": {
+    "required": [
+      "GMAIL_OAUTH_CLIENT_ID",
+      "GMAIL_OAUTH_CLIENT_SECRET",
+      "GMAIL_OAUTH_REFRESH_TOKEN",
+      "NOTION_TOKEN",
+      "ADMIN_TOKEN"
+    ]
+  },
+  "triggers": {
+    "crons": ["17 15 * * *"]
+  },
+  "d1_databases": [
+    {
+      "binding": "SYNC_DB",
+      "database_name": "boundless-gmail-notion-sync-staging",
+      "database_id": "4f58e6ec-073b-4ac3-8abf-5af5bd8f98fa"
+    }
+  ],
+  "vars": {
+    "GMAIL_USER": "jason@boundlesscorp.ca",
+    "GMAIL_PUBSUB_TOPIC": "projects/boundless-gmail-sync-staging/topics/boundless-gmail-events-staging",
+    "PUBSUB_AUDIENCE": "https://boundless-gmail-notion-sync-staging.jason-406.workers.dev/pubsub/gmail",
+    "PUBSUB_SERVICE_ACCOUNT_EMAIL": "boundless-gmail-push-staging@boundless-gmail-sync-staging.iam.gserviceaccount.com",
+    "NOTION_VERSION": "2026-03-11",
+    "NOTION_COMPANIES_DATA_SOURCE_ID": "5e25023c-6c34-41ee-94cd-319d0b957c60",
+    "NOTION_OUTREACH_EVENTS_DATA_SOURCE_ID": "a872e9d9-2cef-4465-b636-b04ed0026368",
+    "PROCESS_OUTBOUND": "true",
+    "PROCESS_INBOUND": "false",
+    "WRITE_MODE": "observe",
+    "FINALIZE_RELEASE_STATE": "false"
+  }
+}
