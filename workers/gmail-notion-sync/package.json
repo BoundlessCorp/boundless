@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preflight": "node scripts/preflight.mjs",
-    "preflight:staging": "BOUNDLESS_WRANGLER_CONFIG=wrangler.staging.jsonc node scripts/preflight.mjs",
+    "preflight:staging": "node scripts/preflight.mjs wrangler.staging.jsonc",
     "deploy:staging": "npm run preflight:staging && wrangler deploy --config wrangler.staging.jsonc",
     "d1:init:staging": "wrangler d1 execute boundless-gmail-notion-sync-staging --remote --file=schema.sql --config wrangler.staging.jsonc"
   },
