@@ -29,8 +29,8 @@
   "vars": {
     "GMAIL_USER": "jason@boundlesscorp.ca",
     "GMAIL_PUBSUB_TOPIC": "projects/boundless-gmail-sync-staging/topics/boundless-gmail-events-staging",
-    "PUBSUB_AUDIENCE": "https://REPLACE_WITH_STAGING_WORKER_HOST/pubsub/gmail",
-    "PUBSUB_SERVICE_ACCOUNT_EMAIL": "REPLACE_WITH_STAGING_PUSH_SERVICE_ACCOUNT",
+    "PUBSUB_AUDIENCE": "https://boundless-gmail-notion-sync-staging.jason-406.workers.dev/pubsub/gmail",
+    "PUBSUB_SERVICE_ACCOUNT_EMAIL": "boundless-gmail-push-staging@boundless-gmail-sync-staging.iam.gserviceaccount.com",
     "NOTION_VERSION": "2026-03-11",
     "NOTION_COMPANIES_DATA_SOURCE_ID": "5e25023c-6c34-41ee-94cd-319d0b957c60",
     "NOTION_OUTREACH_EVENTS_DATA_SOURCE_ID": "a872e9d9-2cef-4465-b636-b04ed0026368",
